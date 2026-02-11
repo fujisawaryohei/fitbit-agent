@@ -216,7 +216,7 @@ frontend/
 | `application.yml` | 共通設定 |
 | `application-dev.yml` | 開発環境設定 |
 | `application-prod.yml` | 本番環境設定 |
-| `application-test.yml` | テスト環境設定 |
+| ~~`application-test.yml`~~ | ~~テスト環境設定~~ ※ 不要（テスト環境は用意しない） |
 
 ### 5.3 フロントエンド
 
