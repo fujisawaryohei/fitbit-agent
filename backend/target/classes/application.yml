@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: fitbit-agent
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
