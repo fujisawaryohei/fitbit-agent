@@ -34,7 +34,7 @@
 - **受入条件**:
   - [ ] `docker compose up` でPostgreSQLが起動する
   - [ ] Spring BootからPostgreSQLに接続できる
-- **ステータス**: `[ ]`
+- **ステータス**: `[x]`
 - **ブロック**: TASK-001
 
 ### TASK-004: Flyway DBマイグレーション初期設定

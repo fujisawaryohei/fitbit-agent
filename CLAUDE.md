@@ -78,6 +78,7 @@ frontend/       - フロントエンド (React)
 docker/         - Docker関連 (ローカル開発用)
 .github/        - CI/CD設定
 .steering/      - 作業指針（タスク一覧・作業指示）
+.questions/     - 技術Q&A記録
 ```
 
 ## Documents
@@ -93,8 +94,12 @@ docker/         - Docker関連 (ローカル開発用)
 | 開発ガイドライン | docs/development-guidelines.md | コーディング規約・命名規則・テスト方針・Git運用・レビュー基準 |
 | チケット管理 | .steering/tasklist.md | 実装タスク一覧・進捗管理（PMが管理） |
 | 作業指示 | .steering/TASK-xxx_{日付}.md | チケットをブレイクダウンした作業手順 |
+| 技術Q&A | .questions/question-{日付}.md | ペアプロ中の技術的な質問と回答の記録 |
 
 ## Conventions
 - ドキュメントは日本語で記述
 - コミットメッセージは英語
 - コードコメントは英語
+- ユーザーから技術的な質問があった場合、回答後に `.questions/question-{YYYY-MM-DD}.md` に記録する
+  - 同日のファイルが既にあれば追記する
+  - 質問内容を見出し3（`###`）、回答内容をノーマルテキストで記載する
