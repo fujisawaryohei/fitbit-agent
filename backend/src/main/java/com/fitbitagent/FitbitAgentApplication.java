@@ -1,0 +1,11 @@
+package com.fitbitagent;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class FitbitAgentApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(FitbitAgentApplication.class, args);
+    }
+}
