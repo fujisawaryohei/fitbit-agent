@@ -21,6 +21,8 @@
 |-------------|---------|
 | アーキテクチャ設計書 | docs/architecture.md |
 | リポジトリ定義書 | docs/repository-structure.md |
+| チケット管理 | .steering/tasklist.md |
+| 技術Q&A | .questions/question-{日付}.md |
 
 ---
 

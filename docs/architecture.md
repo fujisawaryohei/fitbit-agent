@@ -30,6 +30,8 @@
 | 基本設計書 | docs/basic-functional-design.md |
 | リポジトリ定義書 | docs/repository-structure.md |
 | 開発ガイドライン | docs/development-guidelines.md |
+| チケット管理 | .steering/tasklist.md |
+| 技術Q&A | .questions/question-{日付}.md |
 
 ---
 

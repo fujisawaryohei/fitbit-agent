@@ -49,6 +49,11 @@ fitbit-agent/
 ├── .github/                           # GitHub設定
 │   └── workflows/
 │       └── ci.yml                     #   CI/CDパイプライン
+├── .steering/                         # 作業指針
+│   ├── tasklist.md                    #   チケット一覧・進捗管理
+│   └── TASK-xxx_{日付}.md             #   チケットをブレイクダウンした作業手順
+├── .questions/                        # 技術Q&A記録
+│   └── question-{日付}.md             #   ペアプロ中の質問と回答
 ├── CLAUDE.md                          # Claude Code 設定
 ├── .gitignore
 └── README.md
