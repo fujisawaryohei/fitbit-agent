@@ -8,6 +8,30 @@ spring:
     locations: classpath:db/migration
   jpa:
     show-sql: true
+  security:
+    oauth2:
+      client:
+        registration:
+          fitbit:
+            client-id: ${FITBIT_CLIENT_ID}
+            client-secret: ${FITBIT_CLIENT_SECRET}
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/api/auth/callback"
+            scope: activity,body,sleep,nutrition,heartrate,profile
+        provider:
+          fitbit:
+            authorization-uri: https://www.fitbit.com/oauth2/authorize
+            token-uri: https://api.fitbit.com/oauth2/token
+            user-info-uri: https://api.fitbit.com/1/user/-/profile.json
+            user-name-attribute: encodedId
+fitbit:
+  client-id: ${FITBIT_CLIENT_ID}
+  client-secret: ${FITBIT_CLIENT_SECRET}
+  token-uri: https://api.fitbit.com/oauth2/token
+
+token:
+  encryption-key: ${TOKEN_ENCRYPTION_KEY:dev-encryption-key-32bytes-pad!}
+
 logging:
   level: 
     com.fitbitagent: DEBUG
