@@ -42,10 +42,10 @@
 - **機能ID**: -
 - **概要**: 基本設計書のデータモデルに基づき、Flywayマイグレーションファイルを作成する
 - **受入条件**:
-  - [ ] 全テーブル（users, oauth_tokens, body_records, activity_records, sleep_records, nutrition_records, heart_rate_records, goals, ai_advices, chat_messages）が作成される
-  - [ ] インデックスが設計通りに作成される
-  - [ ] `mvn flyway:migrate` が成功する
-- **ステータス**: `[ ]`
+  - [x] 全テーブル（users, oauth_tokens, body_records, activity_records, sleep_records, nutrition_records, heart_rate_records, goals, ai_advices, chat_messages）が作成される
+  - [x] インデックスが設計通りに作成される
+  - [x] `mvn flyway:migrate` が成功する
+- **ステータス**: `[x]`
 - **ブロック**: TASK-003
 
 ### TASK-005: GitHub Actions CI パイプライン構築
