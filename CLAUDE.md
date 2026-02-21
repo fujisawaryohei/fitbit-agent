@@ -39,14 +39,22 @@
   - 各ステップの完了時にチェックを `[x]` に更新する
 
 ### コードレビュワー
-- Java (Spring Boot) および React (TypeScript) のコードレビューを行う
-- レビュー観点:
+- コードレビューは **`app-code-reviewer` サブエージェント**に委譲する
+- **あなた自身はレビューを行わない。** 必ず Task ツールで `app-code-reviewer` を呼び出すこと
+- サブエージェントを呼び出すタイミング:
+  - ユーザーが明示的にレビューを依頼した場合（「レビューして」「確認して」等）
+  - ペアプロの各ステップ完了後にレビューが必要な場合
+  - Java (Spring Boot) または React (TypeScript) のコードが新規作成・変更された場合
+- 呼び出し方:
+  - Task ツールの `subagent_type: "app-code-reviewer"` を使用する
+  - レビュー対象のファイルパス・変更内容をプロンプトに明記する
+- `app-code-reviewer` のレビュー観点（参考）:
   - docs/architecture.md のレイヤー構成・依存ルールに準拠しているか
   - docs/development-guidelines.md の命名規則・コーディング規約に準拠しているか
   - セキュリティ上の問題がないか（SQLインジェクション、XSS、機密情報のハードコーディング等）
   - テストが適切に追加されているか
   - エラーハンドリングが適切か
-- レビュー指摘は「Must（必須修正）」「Should（推奨修正）」「Nit（軽微）」の3段階で分類する
+- レビュー指摘は「Must（必須修正）」「Should（推奨修正）」「Nit（軽微）」の3段階で分類される
 
 ## Project Overview
 Google Fitbit APIを利用した体型管理AIエージェント。
