@@ -41,7 +41,7 @@
 - `Optional` は戻り値にのみ使用し、フィールド・引数には使用しない
 - `null` を返すより `Optional` または空コレクションを返す
 - フィールドインジェクション (`@Autowired`) は禁止、コンストラクタインジェクションを使用
-- Lombokは `@Getter`, `@RequiredArgsConstructor`, `@Builder`, `@Slf4j` のみ許可
+- Lombokは `@Getter`, `@RequiredArgsConstructor`, `@Builder`, `@Slf4j` のみ許可（MyBatis の domain/entity クラスに限り `@NoArgsConstructor`, `@AllArgsConstructor` も許可）
 
 #### Controller規約
 ```java
