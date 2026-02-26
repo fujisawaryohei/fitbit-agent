@@ -162,25 +162,44 @@ export default SummaryCard;
 
 | 種別 | 対象 | ツール | カバレッジ目標 |
 |------|------|-------|-------------|
-| 単体テスト | Service, Client, ユーティリティ | JUnit 5 + Mockito | 80%以上 |
-| 結合テスト | Repository (DB) | Testcontainers + PostgreSQL | 主要クエリ全件 |
-| APIテスト | Controller (エンドポイント) | MockMvc | 全エンドポイント |
+| 単体テスト | Service, Client, ユーティリティ | Spock Framework + Groovy | 80%以上 |
+| 結合テスト | Mapper (DB) | Spock + Testcontainers + PostgreSQL | 主要クエリ全件 |
+| APIテスト | Controller (エンドポイント) | Spock + MockMvc | 全エンドポイント |
 | フロントエンド単体テスト | コンポーネント、フック | Vitest + React Testing Library | 主要コンポーネント |
 
 ### 4.2 テストの原則
 
-- **テストは本番コードと同じパッケージ構成**にする
+- **テストファイルは `src/test/groovy` 以下に配置**し、本番コードと同じパッケージ構成にする
 - **外部API呼び出しは必ずモック**する（Fitbit API, Claude API）
-- テストメソッド名は `should_期待結果_when_条件` 形式
+- テストメソッド名は自然言語で記述する（Spock の `def "..."` 形式）
 - 1テストメソッドで1つの振る舞いのみ検証
+- `given / when / then` ブロックで構造化して記述する
 
-```java
-// Good: テストメソッド名の例
-@Test
-void should_returnDailySummary_when_dataExists() { ... }
+```groovy
+// Good: Spock のテスト記述例
+class GoalServiceSpec extends Specification {
 
-@Test
-void should_throwException_when_rateLimitExceeded() { ... }
+    def "should return daily summary when data exists"() {
+        given:
+        def userId = UUID.randomUUID()
+        // ...セットアップ
+
+        when:
+        def result = goalService.getSummary(userId)
+
+        then:
+        result != null
+        result.steps == 8000
+    }
+
+    def "should throw exception when rate limit exceeded"() {
+        when:
+        fitbitClient.fetchData()
+
+        then:
+        thrown(RateLimitExceededException)
+    }
+}
 ```
 
 ### 4.3 テスト実行

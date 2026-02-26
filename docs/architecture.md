@@ -125,8 +125,9 @@ graph TB
 | セキュリティ | Spring Security + OAuth2 Client | - |
 | DB マイグレーション | Flyway | - |
 | HTTP クライアント | Spring WebClient (WebFlux) | - |
-| バリデーション | Jakarta Bean Validation | - |
-| テスト | JUnit 5 + Mockito + Testcontainers | - |
+| バリデーション | Hibernate Validator | - |
+| ロギング | Logback | - |
+| テスト | Spock Framework + Groovy + Testcontainers | - |
 | ビルド | Maven | - |
 
 ### 3.2 パッケージ構成
