@@ -39,7 +39,7 @@ fitbit-agent/
 │   ├── src/
 │   ├── pom.xml
 │   └── Dockerfile
-├── frontend/                          # フロントエンド (React)
+├── frontend/                          # フロントエンド (Vue.js)
 │   ├── src/
 │   ├── public/
 │   ├── package.json
@@ -110,7 +110,7 @@ backend/
 │   │           ├── V4__create_goals.sql
 │   │           └── V5__create_ai_tables.sql
 │   └── test/
-│       ├── java/com/fitbitagent/
+│       ├── groovy/com/fitbitagent/
 │       │   ├── controller/
 │       │   ├── service/
 │       │   ├── repository/
@@ -127,8 +127,8 @@ backend/
 |------------|------|------------|
 | `controller/` | HTTPリクエストの受付・レスポンス返却 | `@RestController` クラス |
 | `service/` | ビジネスロジックの実装 | `@Service` クラス |
-| `repository/` | データアクセス | `JpaRepository` インターフェース |
-| `domain/entity/` | DBテーブルに対応するエンティティ | `@Entity` クラス |
+| `repository/` | データアクセス | MyBatis `@Mapper` インターフェース |
+| `domain/entity/` | DBテーブルに対応するPOJO | アノテーションなしの Java クラス |
 | `domain/enums/` | ドメイン固有の列挙型 | GoalType, AdviceType, ChatRole |
 | `client/fitbit/` | Fitbit API通信 | APIクライアント、レート制限、DTO |
 | `client/claude/` | Claude API通信 | APIクライアント、プロンプト構築、DTO |
@@ -138,7 +138,7 @@ backend/
 | `exception/` | 例外クラス・グローバルハンドラー | カスタム例外、`@RestControllerAdvice` |
 | `resources/prompts/` | AIプロンプトテンプレート | テキストファイル |
 | `resources/db/migration/` | DBマイグレーション | Flyway SQLファイル |
-| `test/` | テストコード | 本番コードと同じパッケージ構成 |
+| `test/groovy/` | テストコード（Spock） | 本番コードと同じパッケージ構成の Groovy ファイル |
 
 ---
 
@@ -147,23 +147,24 @@ backend/
 ```
 frontend/
 ├── src/
-│   ├── main.tsx
-│   ├── App.tsx
+│   ├── main.ts
+│   ├── App.vue
 │   ├── pages/
-│   │   ├── LoginPage.tsx
-│   │   ├── DashboardPage.tsx
-│   │   ├── ChartDetailPage.tsx
-│   │   ├── GoalSettingPage.tsx
-│   │   ├── ChatPage.tsx
-│   │   ├── WeeklyReportPage.tsx
-│   │   ├── ProfilePage.tsx
-│   │   └── SettingsPage.tsx
+│   │   ├── LoginPage.vue
+│   │   ├── DashboardPage.vue
+│   │   ├── ChartDetailPage.vue
+│   │   ├── GoalSettingPage.vue
+│   │   ├── ChatPage.vue
+│   │   ├── WeeklyReportPage.vue
+│   │   ├── ProfilePage.vue
+│   │   └── SettingsPage.vue
 │   ├── components/
 │   │   ├── layout/
 │   │   ├── dashboard/
 │   │   ├── chat/
 │   │   └── common/
-│   ├── hooks/
+│   ├── composables/
+│   ├── stores/
 │   ├── api/
 │   ├── types/
 │   └── utils/
@@ -182,12 +183,13 @@ frontend/
 
 | ディレクトリ | 役割 | 配置するもの |
 |------------|------|------------|
-| `pages/` | 画面単位のコンポーネント（ルーティング対応） | 1画面 = 1ファイル。画面IDと対応 |
-| `components/layout/` | 共通レイアウト | Header, BottomNav, AuthLayout |
-| `components/dashboard/` | ダッシュボード専用コンポーネント | SummaryCard, TrendChart 等 |
-| `components/chat/` | チャット専用コンポーネント | ChatMessage, ChatInput |
-| `components/common/` | 汎用UIコンポーネント | LoadingSpinner, ErrorMessage 等 |
-| `hooks/` | カスタムフック | React Query ラッパー、状態管理 |
+| `pages/` | 画面単位のコンポーネント（ルーティング対応） | 1画面 = 1ファイル（.vue）。画面IDと対応 |
+| `components/layout/` | 共通レイアウト | Header.vue, BottomNav.vue, AuthLayout.vue |
+| `components/dashboard/` | ダッシュボード専用コンポーネント | SummaryCard.vue, TrendChart.vue 等 |
+| `components/chat/` | チャット専用コンポーネント | ChatMessage.vue, ChatInput.vue |
+| `components/common/` | 汎用UIコンポーネント | LoadingSpinner.vue, ErrorMessage.vue 等 |
+| `composables/` | Composition API フック（useXxx） | API呼び出し・状態管理ロジック |
+| `stores/` | Pinia ストア | 認証状態・グローバルUI状態 |
 | `api/` | バックエンドAPI通信 | Axiosインスタンス、各APIモジュール |
 | `types/` | TypeScript型定義 | APIレスポンス型、ドメイン型 |
 | `utils/` | ユーティリティ関数 | 日付・数値フォーマット等 |
@@ -232,7 +234,7 @@ frontend/
 | `vite.config.ts` | Viteビルド設定（プロキシ等） |
 | `tailwind.config.js` | Tailwind CSS設定 |
 | `eslint.config.js` | ESLint設定 |
-| `Dockerfile` | React SPAコンテナ定義（ビルド→Nginx） |
+| `Dockerfile` | Vue.js SPAコンテナ定義（ビルド→Nginx） |
 
 ### 5.4 インフラ
 
@@ -274,7 +276,7 @@ MVP段階では**単一SPAアプリケーション**とする。
 | 方針 | 理由 |
 |------|------|
 | モノレポ構成にしない | 画面数8のMVPには不要 |
-| ページ単位でコード分割 | React.lazy + Suspense による動的インポートで初回ロードを軽量化 |
+| ページ単位でコード分割 | Vue Router の動的インポート（`() => import(...)`）で初回ロードを軽量化 |
 
 ---
 

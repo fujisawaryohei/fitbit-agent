@@ -57,7 +57,7 @@ public ResponseEntity<GoalResponse> createGoal(@Valid @RequestBody GoalCreateReq
 - `@Transactional` はService層のメソッドに付与
 - 読み取り専用メソッドには `@Transactional(readOnly = true)` を使用
 
-### 2.2 TypeScript / React (フロントエンド)
+### 2.2 TypeScript / Vue.js (フロントエンド)
 
 #### フォーマット
 - Prettier + ESLint で統一
@@ -67,30 +67,30 @@ public ResponseEntity<GoalResponse> createGoal(@Valid @RequestBody GoalCreateReq
 
 #### 基本ルール
 - `any` 型の使用は禁止、必ず型を明示する
-- コンポーネントは関数コンポーネント + フックで記述（クラスコンポーネント不可）
-- `useEffect` 内の副作用は必ずクリーンアップ関数を返す
+- コンポーネントは **Composition API（`<script setup lang="ts">`）** で記述（Options API 不可）
+- リアクティブな値は `ref` / `reactive`、派生値は `computed` を使用する
 - イベントハンドラは `handle` プレフィックス（例: `handleSubmit`, `handleClick`）
 
-#### コンポーネント規約
-```tsx
-// Good: Props型定義、デフォルトエクスポート
-type SummaryCardProps = {
+#### コンポーネント規約（Single File Component）
+```vue
+<!-- Good: <script setup> + Props型定義 -->
+<script setup lang="ts">
+type Props = {
   title: string;
   value: number | null;
   unit: string;
   trend?: number;
 };
 
-const SummaryCard = ({ title, value, unit, trend }: SummaryCardProps) => {
-  return (
-    <div>
-      <h3>{title}</h3>
-      <p>{value !== null ? `${value} ${unit}` : '--'}</p>
-    </div>
-  );
-};
+defineProps<Props>();
+</script>
 
-export default SummaryCard;
+<template>
+  <div>
+    <h3>{{ title }}</h3>
+    <p>{{ value !== null ? `${value} ${unit}` : '--' }}</p>
+  </div>
+</template>
 ```
 
 ---
@@ -131,7 +131,7 @@ export default SummaryCard;
 | 関数・変数 | lowerCamelCase | `fetchGoals`, `isLoading` |
 | 型・インターフェース | UpperCamelCase | `GoalResponse`, `DashboardSummary` |
 | 定数 | UPPER_SNAKE_CASE | `API_BASE_URL` |
-| ファイル名（コンポーネント） | UpperCamelCase.tsx | `SummaryCard.tsx` |
+| ファイル名（コンポーネント） | UpperCamelCase.vue | `SummaryCard.vue` |
 | ファイル名（その他） | lowerCamelCase.ts | `dashboardApi.ts`, `useAuth.ts` |
 
 ### 3.3 API エンドポイント
@@ -165,7 +165,7 @@ export default SummaryCard;
 | 単体テスト | Service, Client, ユーティリティ | Spock Framework + Groovy | 80%以上 |
 | 結合テスト | Mapper (DB) | Spock + Testcontainers + PostgreSQL | 主要クエリ全件 |
 | APIテスト | Controller (エンドポイント) | Spock + MockMvc | 全エンドポイント |
-| フロントエンド単体テスト | コンポーネント、フック | Vitest + React Testing Library | 主要コンポーネント |
+| フロントエンド単体テスト | コンポーネント、Composable | Vitest + Vue Test Utils | 主要コンポーネント |
 
 ### 4.2 テストの原則
 

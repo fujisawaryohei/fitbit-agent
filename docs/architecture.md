@@ -263,54 +263,59 @@ com.fitbitagent
 
 | カテゴリ | 技術 | 理由 |
 |---------|------|------|
-| フレームワーク | React 18 | コンポーネント指向・エコシステムの充実 |
-| 言語 | TypeScript | 型安全性による開発効率向上 |
-| ビルドツール | Vite | 高速な開発サーバー・ビルド |
-| ルーティング | React Router v6 | SPAルーティングの標準 |
-| 状態管理 | React Query + Context | サーバー状態とUI状態の分離 |
+| フレームワーク | Vue.js 3 + TypeScript | Composition API による直感的なコンポーネント設計 |
+| ビルドツール | Vite (Rollup) | 高速な開発サーバー・本番ビルド |
+| ルーティング | Vue Router 4 | Vue 公式ルーティングライブラリ |
+| 状態管理 | Pinia | Vue 公式状態管理・シンプルなストア設計 |
 | HTTP クライアント | Axios | インターセプター・エラーハンドリング |
-| グラフ描画 | Recharts | React向けグラフライブラリ |
 | UIコンポーネント | Tailwind CSS | ユーティリティファースト・高速なUI構築 |
+| アニメーション | vue-next-anime.js | Vue 3対応アニメーションライブラリ |
+| DI | tsyringe | TypeScript向けDIコンテナ（サービス層の依存管理） |
+| バリデーション | vee-validate | Vue 3対応フォームバリデーション |
+| テスト | Vitest + Vue Test Utils | 高速単体テスト・Viteネイティブ |
 
 ### 4.2 ディレクトリ構成
 
 ```
 frontend/src/
-├── main.tsx                       # エントリポイント
-├── App.tsx                        # ルートコンポーネント・ルーティング定義
+├── main.ts                        # エントリポイント
+├── App.vue                        # ルートコンポーネント・ルーティング定義
 ├── pages/                         # ページコンポーネント（画面単位）
-│   ├── LoginPage.tsx              #   SCR-001
-│   ├── DashboardPage.tsx          #   SCR-002
-│   ├── ChartDetailPage.tsx        #   SCR-003
-│   ├── GoalSettingPage.tsx        #   SCR-004
-│   ├── ChatPage.tsx               #   SCR-005
-│   ├── WeeklyReportPage.tsx       #   SCR-006
-│   ├── ProfilePage.tsx            #   SCR-007
-│   └── SettingsPage.tsx           #   SCR-008
+│   ├── LoginPage.vue              #   SCR-001
+│   ├── DashboardPage.vue          #   SCR-002
+│   ├── ChartDetailPage.vue        #   SCR-003
+│   ├── GoalSettingPage.vue        #   SCR-004
+│   ├── ChatPage.vue               #   SCR-005
+│   ├── WeeklyReportPage.vue       #   SCR-006
+│   ├── ProfilePage.vue            #   SCR-007
+│   └── SettingsPage.vue           #   SCR-008
 ├── components/                    # 再利用可能なUIコンポーネント
 │   ├── layout/
-│   │   ├── Header.tsx
-│   │   ├── BottomNav.tsx
-│   │   └── AuthLayout.tsx         #   認証済みレイアウト
+│   │   ├── Header.vue
+│   │   ├── BottomNav.vue
+│   │   └── AuthLayout.vue         #   認証済みレイアウト
 │   ├── dashboard/
-│   │   ├── SummaryCard.tsx
-│   │   ├── TrendChart.tsx
-│   │   ├── GoalProgress.tsx
-│   │   └── AdviceCard.tsx
+│   │   ├── SummaryCard.vue
+│   │   ├── TrendChart.vue
+│   │   ├── GoalProgress.vue
+│   │   └── AdviceCard.vue
 │   ├── chat/
-│   │   ├── ChatMessage.tsx
-│   │   └── ChatInput.tsx
+│   │   ├── ChatMessage.vue
+│   │   └── ChatInput.vue
 │   └── common/
-│       ├── LoadingSpinner.tsx
-│       ├── ErrorMessage.tsx
-│       └── EmptyState.tsx
-├── hooks/                         # カスタムフック
+│       ├── LoadingSpinner.vue
+│       ├── ErrorMessage.vue
+│       └── EmptyState.vue
+├── composables/                   # Composition API フック（useXxx）
 │   ├── useAuth.ts                 #   認証状態管理
 │   ├── useDashboard.ts            #   ダッシュボードデータ取得
 │   ├── useGoals.ts                #   目標CRUD
 │   ├── useAdvice.ts               #   AIアドバイス取得・再生成
 │   ├── useChat.ts                 #   チャットメッセージ送受信
-│   └── useSync.ts                #   データ同期
+│   └── useSync.ts                 #   データ同期
+├── stores/                        # Pinia ストア
+│   ├── auth.ts                    #   認証状態・ユーザー情報
+│   └── ui.ts                      #   グローバルUI状態（ローディング等）
 ├── api/                           # APIクライアント
 │   ├── client.ts                  #   Axiosインスタンス・インターセプター
 │   ├── authApi.ts
@@ -334,19 +339,18 @@ frontend/src/
 
 | 状態の種類 | 管理方法 | 具体例 |
 |-----------|---------|--------|
-| サーバー状態 | React Query | ダッシュボードデータ、目標、アドバイス |
-| 認証状態 | Context + localStorage | ログイン状態、セッション情報 |
-| UI状態 | useState / useReducer | モーダル開閉、フォーム入力値 |
+| サーバー状態 | Pinia + Axios（composables経由） | ダッシュボードデータ、目標、アドバイス |
+| 認証状態 | Pinia（auth store）+ localStorage | ログイン状態、セッション情報 |
+| UI状態 | ref / reactive（composables内） | モーダル開閉、フォーム入力値 |
 
-**React Queryのキャッシュ戦略**:
+**Piniaストア設計方針**:
 
-| データ | staleTime | refetchOnMount |
-|--------|----------|----------------|
-| ダッシュボードサマリー | 5分 | true |
-| グラフデータ | 10分 | true |
-| 目標 | 30分 | true |
-| AIアドバイス | 1時間 | false |
-| ユーザープロフィール | 30分 | false |
+| ストア | 管理対象 | 備考 |
+|--------|---------|------|
+| `auth.ts` | ログイン状態・ユーザー情報 | localStorage と同期 |
+| `ui.ts` | グローバルローディング・トースト通知 | 画面横断的なUI状態 |
+
+サーバーデータ（ダッシュボード・目標等）は各 composable 内で `ref` + Axios で管理し、Pinia には永続化が必要な状態のみ保持する。
 
 ### 4.4 API通信設計
 
@@ -354,13 +358,13 @@ frontend/src/
 // api/client.ts の設計方針
 // - ベースURL設定
 // - リクエストインターセプター: CSRFトークンをヘッダーに付与
-// - レスポンスインターセプター: 401時にログイン画面へリダイレクト
+// - レスポンスインターセプター: 401時に Vue Router でログイン画面へリダイレクト
 // - エラーレスポンスの統一的なハンドリング
 ```
 
 **SSE（Server-Sent Events）によるチャットストリーミング**:
 - `EventSource` APIを使用してサーバーからのストリーミング応答を受信
-- チャンク受信ごとにメッセージ表示を更新
+- チャンク受信ごとにメッセージ表示を更新（`ref` で反応的に表示）
 - 接続エラー時は自動リトライ（最大3回）
 
 ---
