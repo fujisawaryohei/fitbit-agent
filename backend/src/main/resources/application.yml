@@ -1,7 +1,9 @@
 spring:
   application:
     name: fitbit-agent
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    open-in-view: false
+
+mybatis:
+  mapper-locations: classpath:mybatis/mapper/*.xml
+  type-aliases-package: com.fitbitagent.domain
+  configuration:
+    map-underscore-to-camel-case: true

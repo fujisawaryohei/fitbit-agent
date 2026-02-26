@@ -65,7 +65,7 @@
 │     Fitbit API Client / Claude API Client         │
 ├─────────────────────────────────────────────────┤
 │              Persistence Layer                   │
-│     Repository (JPA) / PostgreSQL                 │
+│     Mapper (MyBatis) / PostgreSQL                 │
 └─────────────────────────────────────────────────┘
 ```
 
@@ -121,7 +121,7 @@ graph TB
 |---------|------|----------|
 | 言語 | Java | 21 |
 | フレームワーク | Spring Boot | 3.x |
-| ORM | Spring Data JPA + Hibernate | - |
+| ORM | MyBatis | 3.0.3 |
 | セキュリティ | Spring Security + OAuth2 Client | - |
 | DB マイグレーション | Flyway | - |
 | HTTP クライアント | Spring WebClient (WebFlux) | - |
@@ -161,7 +161,7 @@ com.fitbitagent
 │   ├── AiAdviceRepository.java
 │   └── ChatMessageRepository.java
 ├── domain/                              # Domain Model
-│   ├── entity/                          #   JPAエンティティ
+│   ├── entity/                          #   DBテーブルに対応するPOJO（Plain Old Java Object）
 │   │   ├── User.java
 │   │   ├── OAuthToken.java
 │   │   ├── BodyRecord.java
@@ -211,7 +211,7 @@ com.fitbitagent
 │   ├── WebConfig.java                   #   CORS設定
 │   ├── FitbitConfig.java                #   Fitbit API設定値
 │   ├── ClaudeConfig.java               #   Claude API設定値
-│   └── JpaConfig.java                  #   JPA設定
+│   └── MyBatisConfig.java              #   MyBatis設定
 └── exception/                           # 例外
     ├── GlobalExceptionHandler.java      #   グローバル例外ハンドラー
     ├── FitbitApiException.java          #   Fitbit API関連例外
@@ -687,10 +687,12 @@ src/main/resources/prompts/
 spring:
   application:
     name: fitbit-agent
-  jpa:
-    hibernate:
-      ddl-auto: validate
-    open-in-view: false
+
+mybatis:
+  mapper-locations: classpath:mybatis/mapper/*.xml
+  type-aliases-package: com.fitbitagent.domain
+  configuration:
+    map-underscore-to-camel-case: true
 
 # application-dev.yml（開発環境）
 spring:
