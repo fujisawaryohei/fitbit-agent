@@ -214,6 +214,32 @@ cd frontend && npm test             # 単体テスト
 cd frontend && npm run test:ci      # CI用（カバレッジ出力）
 ```
 
+### 4.4 実装とテストの進め方（Definition of Done）
+
+**実装タスクは、対応するテストコードが作成されるまで「完了」とみなさない。**
+
+- 各実装タスク（TASK-xxx）には、対応するテストタスク（TASK-xxxT）がセットで存在する
+- テストタスクは実装タスク完了後に着手し、`mvn test` が通ることを確認してから完了とする
+- テスト対象の優先度:
+  1. **Service層**: ビジネスロジックを含むため必須
+  2. **Mapper（DB結合テスト）**: 主要クエリは必須
+  3. **Controller**: 全エンドポイントのAPIテストを作成
+  4. **Client（外部API）**: 外部API呼び出し部分はモックを使って必須
+
+#### テストファイルの配置ルール
+
+```
+backend/
+  src/
+    test/
+      groovy/
+        com/fitbitagent/
+          service/        ← ServiceのSpocテスト
+          repository/     ← Mapperの結合テスト
+          controller/     ← ControllerのAPIテスト
+          client/         ← Clientの単体テスト
+```
+
 ---
 
 ## 5. Git運用ルール

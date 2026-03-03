@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fitbitagent.repository.UserMapper">
+
+    <resultMap id="UserResultMap" type="com.fitbitagent.domain.entity.User">
+        <id property="id" column="id" javaType="java.util.UUID"/>
+        <result property="fitbitUserId" column="fitbit_user_id"/>
+        <result property="displayName" column="display_name"/>
+        <result property="gender" column="gender"/>
+        <result property="heightCm" column="height_cm"/>
+        <result property="dateOfBirth" column="date_of_birth"/>
+        <result property="activityLevel" column="activity_level"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" parameterType="java.util.UUID" resultMap="UserResultMap">
+        SELECT * FROM users WHERE id = #{id}
+    </selectp
+
+    <select id="findByFitbitUserId" parameterType="java.util.UUID" resultMap="UserResultMap">
+        SELECT * FROM users WHERE fitbit_puser_id = #{fitbitUserId}
+    </select>
+
+    <insert id="insert" parameterType="com.fitbitagent.domain.entity.User" resultMap="UserResultMap">
+        INSERT INTO users (id, fitbit_user_id, display_name, gender, height_cm,
+        date_of_birth, activity_level, created_at, updated_at)
+        VALUES (#{id}, #{fitbitUserId}, #{displayName}, #{gender}, #{heightCm}, 
+        #{dateOfBirth}, #{activityLevel}, NOW(), NOW())
+    </insert>
+
+    <update id="update" parameterType="com.fitbitagent.domain.entity.User">
+        UPDATE users
+        SET display_name   = #{displayName},
+            gender         = #{gender},
+            height_cm      = #{heightCm},
+            date_of_birth  = #{dateOfBirth},
+            activity_level = #{activityLevel},
+            updated_at     = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper>
