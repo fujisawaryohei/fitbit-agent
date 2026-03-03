@@ -1,4 +1,4 @@
-package com.fitbitagent.domain.entity;
+̦package com.fitbitagent.domain.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
