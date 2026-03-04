@@ -18,17 +18,15 @@
 
     <select id="findById" parameterType="java.util.UUID" resultMap="UserResultMap">
         SELECT * FROM users WHERE id = #{id}
-    </selectp
-
-    <select id="findByFitbitUserId" parameterType="java.util.UUID" resultMap="UserResultMap">
-        SELECT * FROM users WHERE fitbit_puser_id = #{fitbitUserId}
     </select>
 
-    <insert id="insert" parameterType="com.fitbitagent.domain.entity.User" resultMap="UserResultMap">
-        INSERT INTO users (id, fitbit_user_id, display_name, gender, height_cm,
-        date_of_birth, activity_level, created_at, updated_at)
-        VALUES (#{id}, #{fitbitUserId}, #{displayName}, #{gender}, #{heightCm}, 
-        #{dateOfBirth}, #{activityLevel}, NOW(), NOW())
+    <select id="findByFitbitUserId" parameterType="String" resultMap="UserResultMap">
+        SELECT * FROM users WHERE fitbit_user_id = #{fitbitUserId}
+    </select>
+
+    <insert id="insert" parameterType="com.fitbitagent.domain.entity.User">
+        INSERT INTO users (id, fitbit_user_id, display_name, gender, height_cm, date_of_birth, activity_level, created_at, updated_at)
+        VALUES (#{id}, #{fitbitUserId}, #{displayName}, #{gender}, #{heightCm}, #{dateOfBirth}, #{activityLevel}, NOW(), NOW())
     </insert>
 
     <update id="update" parameterType="com.fitbitagent.domain.entity.User">
