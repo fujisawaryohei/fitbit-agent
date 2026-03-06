@@ -25,10 +25,11 @@ spring:
 fitbit:
   client-id: ${FITBIT_CLIENT_ID}
   client-secret: ${FITBIT_CLIENT_SECRET}
+  redirect-uri: http://localhost:8080/api/auth/callback
   token-uri: https://api.fitbit.com/oauth2/token
 
-token:
-  encryption-key: ${TOKEN_ENCRYPTION_KEY:dev-encryption-key-32bytes-pad!}
+app:
+  token-encryption-key: ${TOKEN_ENCRYPTION_KEY:dev-encryption-key-32bytes-pad!}
 
 mybatis:
   configuration:
