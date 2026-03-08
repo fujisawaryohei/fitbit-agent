@@ -49,6 +49,36 @@
   - Nit: Lombok imports not in alphabetical order within the same package group.
   - OAuthToken.java is now considered implementation-complete and can move to the next task.
 
+- Session 5 (TokenEncryptionService.java — initial review):
+  - Critical: IV zero-filled instead of SecureRandom-generated — breaks AES-GCM security.
+  - Critical: encrypt() used GCM_IV_LENGTH (12) as tag length arg instead of GCM_TAG_LENGTH (128).
+  - Class missing @Service annotation; no @Slf4j.
+  - Property key typo: "app.token-enctyption-key" (missing 'r').
+  - Variable name `KeyBytes` (UpperCamelCase) instead of `keyBytes`.
+  - plainText.getBytes() and new String(bytes) without StandardCharsets.UTF_8.
+
+- Session 6 (TokenEncryptionService.java — re-review after Must fixes):
+  - All Session 5 critical/security Must items CORRECTLY FIXED: SecureRandom IV, GCM_TAG_LENGTH
+    consistency, @Service added, @Slf4j added.
+  - STILL UNRESOLVED (carried over as Must this session):
+    1. Property key typo: "enctyption" still present at line 24 — startup failure risk.
+    2. plainText.getBytes() still missing StandardCharsets.UTF_8 (line 37).
+    3. new String(cipher.doFinal(encrypted)) still missing StandardCharsets.UTF_8 (line 59).
+  - STILL UNRESOLVED (Should): `KeyBytes` naming at line 25, broad exception handling with no logging.
+  - Pattern: User fixes security-critical Must items quickly but misses Should/Nit items from
+    previous sessions. Consider explicitly tracking carryover items between sessions.
+
+- Session 7 (FitbitOAuthClient.java — initial review):
+  - Two typos in refreshToken() request parameters: "grand_type" (grant), "refresh_toekn" (token).
+    These are silent runtime bugs — no compile error, but Fitbit API returns 400/error at runtime.
+    Reinforces the pattern of string literal typos being hard to catch without tests.
+  - FitbitApiException placed in com.fitbitagent.client.fitbit.exception instead of
+    com.fitbitagent.exception as defined in docs/architecture.md 3.2. This is a package placement
+    violation — exception classes must all live under com.fitbitagent.exception for GlobalExceptionHandler
+    to work correctly.
+  - callTokenEndpoint() was public but should be private (internal helper method).
+  - Map.class used as raw type with @SuppressWarnings("unchecked") — recommended to use typed DTO instead.
+
 ## User Profile
 - Java beginner — needs explanations of underlying principles, not just fix instructions
 - Learning through pair programming style
