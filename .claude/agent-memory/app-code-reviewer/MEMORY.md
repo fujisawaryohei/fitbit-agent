@@ -79,6 +79,35 @@
   - callTokenEndpoint() was public but should be private (internal helper method).
   - Map.class used as raw type with @SuppressWarnings("unchecked") — recommended to use typed DTO instead.
 
+- Session 8 (OAuthService.java — initial review):
+  - CRITICAL BUG: refreshToken() calls token.updateTokens() but omits oAuthTokenMapper.update(token).
+    MyBatis does NOT auto-track entity changes (unlike JPA Dirty Checking). Mapper update() must be
+    called explicitly. This pattern must be verified in all future Service methods that modify entities.
+  - RuntimeException used directly in refreshToken() instead of ResourceNotFoundException.
+    Architecture doc 3.2 defines ResourceNotFoundException in com.fitbitagent.exception — always use
+    domain-specific exceptions so GlobalExceptionHandler can map them to correct HTTP codes.
+  - tokenResponse fields extracted without null checks — NullPointerException risk when Fitbit API
+    returns unexpected response (missing fields). Service layer must validate external API responses.
+  - HttpSession injected into Service layer (handleCallback signature) — HTTP concerns should stay
+    in Controller layer per architecture doc 3.3. Raised as Should since atomicity intent is valid.
+  - @Slf4j missing — architecture doc 8.2 requires INFO logging for major business events like login.
+  - No test file exists yet (src/test/groovy/com/fitbitagent/service/) — guidelines require tests
+    before task is considered Done.
+
+- Session 9 (AuthController.java — initial review):
+  - CRITICAL import bug: `org.springframework.web.reactive.result.view.RedirectView` (WebFlux) used
+    instead of `org.springframework.web.servlet.view.RedirectView` (Spring MVC). Both are on classpath
+    since pom.xml includes spring-boot-starter-webflux for WebClient. Compiles but redirect won't work
+    at runtime. Always verify Spring MVC vs WebFlux stack when using view-related classes.
+  - Security guard: savedState null check missing. When session expires before callback, `savedState`
+    is null. `state.equals(null)` returns false safely, but the log message `Expected: null` is
+    misleading. Explicit null guard on savedState improves clarity.
+  - Naming mismatch: architecture.md 3.2 defines the class as `AuthService` but implementation uses
+    `OAuthService`. Variable name `authService` in the controller partially masks this inconsistency.
+  - No test file for Controller layer yet — guidelines 4.4 requires tests before task is Done.
+  - Good: CSRF state pattern correctly implemented. @Slf4j, @RequiredArgsConstructor correct. Layer
+    responsibility properly maintained (Controller delegates to Service, no business logic in Controller).
+
 ## User Profile
 - Java beginner — needs explanations of underlying principles, not just fix instructions
 - Learning through pair programming style
