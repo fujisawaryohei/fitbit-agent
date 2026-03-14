@@ -108,6 +108,24 @@
   - Good: CSRF state pattern correctly implemented. @Slf4j, @RequiredArgsConstructor correct. Layer
     responsibility properly maintained (Controller delegates to Service, no business logic in Controller).
 
+- Session 10 (GlobalExceptionHandler.java — initial review):
+  - SECURITY Must: FitbitApiException.getMessage() returned directly to client — may expose Fitbit API
+    internal error details. Always return safe fixed messages to clients; log the full exception server-side.
+  - Design Must: Response format uses Map<String, String> (flat) but architecture.md 8.1 defines a
+    nested JSON schema: { "error": { "code": "...", "message": "...", "details": {...} } }.
+    ErrorResponse.java DTO (defined in architecture.md 3.2 package structure) was never created.
+  - Completeness Must: Only FitbitApiException and RuntimeException handlers exist. Missing handlers for:
+    ClaudeApiException, RateLimitExceededException, ResourceNotFoundException, MethodArgumentNotValidException.
+    The corresponding exception classes also do not exist yet in the exception package.
+  - Without ResourceNotFoundException handler, 404 cases fall through to RuntimeException and return 500.
+  - Without MethodArgumentNotValidException handler, 400 validation errors return 500.
+  - Should: FitbitApiException maps to a single 502, but architecture.md 8.1 defines two codes:
+    FITBIT_API_ERROR (502) and FITBIT_RATE_LIMITED (429) — needs to differentiate by error type.
+  - Should: No fallback Exception handler — uncaught checked exceptions bypass the unified error format.
+  - Pattern: User tends to implement the minimum viable handler without considering the full exception
+    taxonomy defined in architecture.md 8.1. Always cross-check the error code table when reviewing
+    GlobalExceptionHandler changes.
+
 ## User Profile
 - Java beginner — needs explanations of underlying principles, not just fix instructions
 - Learning through pair programming style
