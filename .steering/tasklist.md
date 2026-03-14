@@ -16,6 +16,8 @@
   - [ ] `mvn compile` が成功する
   - [ ] パッケージ構成が docs/architecture.md に準拠している
 - **ステータス**: `[x]`
+- **parallel-group**: 0-A
+- **影響ファイル**: `backend/`
 
 ### TASK-002: React プロジェクト初期化
 - **優先度**: 高
@@ -26,6 +28,8 @@
   - [ ] `npm run build` が成功する
   - [ ] ディレクトリ構成が docs/repository-structure.md に準拠している
 - **ステータス**: `[ ]`
+- **parallel-group**: 0-A
+- **影響ファイル**: `frontend/`
 
 ### TASK-003: Docker Compose ローカル開発環境構築
 - **優先度**: 高
@@ -36,6 +40,8 @@
   - [ ] Spring BootからPostgreSQLに接続できる
 - **ステータス**: `[x]`
 - **ブロック**: TASK-001
+- **parallel-group**: -
+- **影響ファイル**: `docker/`, `backend/src/main/resources/`
 
 ### TASK-004: Flyway DBマイグレーション初期設定
 - **優先度**: 高
@@ -47,6 +53,8 @@
   - [x] `mvn flyway:migrate` が成功する
 - **ステータス**: `[x]`
 - **ブロック**: TASK-003
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/main/resources/db/migration/`
 
 ### TASK-005: GitHub Actions CI パイプライン構築
 - **優先度**: 中
@@ -56,6 +64,8 @@
   - [ ] PRでバックエンド・フロントエンドのテストが自動実行される
   - [ ] テスト失敗時にPRでステータスが表示される
 - **ステータス**: `[ ]`
+- **parallel-group**: 0-A
+- **影響ファイル**: `.github/workflows/`
 
 ---
 
@@ -71,6 +81,8 @@
   - [ ] トークン自動リフレッシュが動作する
 - **ステータス**: `[>]`
 - **ブロック**: TASK-001, TASK-004
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/main/java/.../auth/`, `backend/src/main/java/.../security/`
 
 ### TASK-010T: 認証・トークン暗号化 単体テスト
 - **優先度**: 高
@@ -84,6 +96,8 @@
   - [ ] `mvn test` が成功する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-010
+- **parallel-group**: 1-A
+- **影響ファイル**: `backend/src/test/groovy/.../auth/`
 
 ### TASK-011: ログイン画面（フロントエンド）
 - **優先度**: 高
@@ -95,6 +109,8 @@
   - [ ] 認証成功後に `/dashboard` にリダイレクトされる
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-002, TASK-010
+- **parallel-group**: -
+- **影響ファイル**: `frontend/src/pages/login/`, `frontend/src/components/`
 
 ### TASK-012: ユーザープロフィール管理（バックエンド）
 - **優先度**: 中
@@ -106,6 +122,8 @@
   - [ ] 初回ログイン時にFitbit APIからプロフィールが自動取得される
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-010
+- **parallel-group**: 1-A
+- **影響ファイル**: `backend/src/main/java/.../user/`
 
 ### TASK-012T: ユーザープロフィール管理 単体テスト
 - **優先度**: 中
@@ -117,6 +135,8 @@
   - [ ] `mvn test` が成功する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-012
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/test/groovy/.../user/`
 
 ### TASK-013: ログアウト
 - **優先度**: 中
@@ -128,6 +148,8 @@
   - [ ] 未認証で保護画面にアクセスするとログイン画面に遷移する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-010
+- **parallel-group**: 1-A
+- **影響ファイル**: `backend/src/main/java/.../auth/`, `frontend/src/`
 
 ---
 
@@ -143,6 +165,8 @@
   - [ ] 401応答時にトークンリフレッシュ→リトライが行われる
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-010
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/main/java/.../fitbit/`
 
 ### TASK-020T: Fitbit APIクライアント 単体テスト
 - **優先度**: 高
@@ -155,6 +179,8 @@
   - [ ] `mvn test` が成功する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-020
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/test/groovy/.../fitbit/`
 
 ### TASK-021: データ同期サービス実装
 - **優先度**: 高
@@ -167,8 +193,8 @@
   - [ ] 部分同期（一部失敗時）でエラーが返却される
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-020
-
----
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/main/java/.../sync/`
 
 ### TASK-021T: データ同期サービス 単体テスト
 - **優先度**: 高
@@ -181,6 +207,10 @@
   - [ ] `mvn test` が成功する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-021
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/test/groovy/.../sync/`
+
+---
 
 ## Phase 3: ダッシュボード
 
@@ -194,6 +224,8 @@
   - [ ] `GET /api/dashboard/progress` で目標進捗が返却される
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-021
+- **parallel-group**: 3-A
+- **影響ファイル**: `backend/src/main/java/.../dashboard/`
 
 ### TASK-030T: ダッシュボードAPI 単体テスト
 - **優先度**: 高
@@ -206,6 +238,8 @@
   - [ ] `mvn test` が成功する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-030
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/test/groovy/.../dashboard/`
 
 ### TASK-031: ダッシュボード画面（フロントエンド）
 - **優先度**: 高
@@ -218,6 +252,8 @@
   - [ ] 目標進捗のプログレスバーが表示される
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-030
+- **parallel-group**: 3-A
+- **影響ファイル**: `frontend/src/pages/dashboard/`
 
 ### TASK-032: グラフ詳細画面（フロントエンド）
 - **優先度**: 中
@@ -229,6 +265,8 @@
   - [ ] ツールチップで詳細値が表示される
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-031
+- **parallel-group**: -
+- **影響ファイル**: `frontend/src/pages/dashboard/charts/`
 
 ---
 
@@ -244,6 +282,8 @@
   - [ ] 過度な目標設定時に警告レスポンスが返却される
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-004
+- **parallel-group**: 4-A
+- **影響ファイル**: `backend/src/main/java/.../goal/`
 
 ### TASK-040T: 目標管理API 単体テスト
 - **優先度**: 高
@@ -256,6 +296,8 @@
   - [ ] `mvn test` が成功する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-040
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/test/groovy/.../goal/`
 
 ### TASK-041: 目標設定画面（フロントエンド）
 - **優先度**: 高
@@ -268,6 +310,8 @@
   - [ ] 既存目標の変更・削除ができる
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-040
+- **parallel-group**: -
+- **影響ファイル**: `frontend/src/pages/goal/`
 
 ---
 
@@ -284,6 +328,8 @@
   - [ ] プロンプトテンプレートの変数埋め込みが動作する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-001
+- **parallel-group**: 5-A
+- **影響ファイル**: `backend/src/main/java/.../claude/`
 
 ### TASK-050T: Claude APIクライアント 単体テスト
 - **優先度**: 高
@@ -297,6 +343,8 @@
   - [ ] `mvn test` が成功する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-050
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/test/groovy/.../claude/`
 
 ### TASK-051: 日次アドバイス生成（バックエンド）
 - **優先度**: 高
@@ -308,6 +356,8 @@
   - [ ] `GET /api/advice/daily/{date}` で保存済みアドバイスが取得できる
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-050, TASK-021
+- **parallel-group**: 5-B
+- **影響ファイル**: `backend/src/main/java/.../advice/`
 
 ### TASK-051T: 日次アドバイス生成 単体テスト
 - **優先度**: 高
@@ -320,6 +370,8 @@
   - [ ] `mvn test` が成功する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-051
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/test/groovy/.../advice/`
 
 ### TASK-052: 日次アドバイス表示（フロントエンド）
 - **優先度**: 高
@@ -330,6 +382,8 @@
   - [ ] 再生成ボタンでアドバイスを更新できる
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-051, TASK-031
+- **parallel-group**: -
+- **影響ファイル**: `frontend/src/pages/dashboard/`, `frontend/src/components/advice/`
 
 ### TASK-053: 週次レポート生成
 - **優先度**: 中
@@ -341,6 +395,8 @@
   - [ ] SCR-006 で週次レポートが閲覧できる
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-051
+- **parallel-group**: 5-B
+- **影響ファイル**: `backend/src/main/java/.../advice/`, `frontend/src/pages/report/`
 
 ### TASK-054: チャットコーチング（バックエンド）
 - **優先度**: 中
@@ -352,6 +408,8 @@
   - [ ] プロンプトにヘルスデータ・会話履歴が含まれる
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-050
+- **parallel-group**: 5-B
+- **影響ファイル**: `backend/src/main/java/.../chat/`
 
 ### TASK-054T: チャットコーチング 単体テスト
 - **優先度**: 中
@@ -363,6 +421,8 @@
   - [ ] `mvn test` が成功する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-054
+- **parallel-group**: -
+- **影響ファイル**: `backend/src/test/groovy/.../chat/`
 
 ### TASK-055: チャット画面（フロントエンド）
 - **優先度**: 中
@@ -374,6 +434,8 @@
   - [ ] 会話の文脈が維持される
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-054
+- **parallel-group**: -
+- **影響ファイル**: `frontend/src/pages/chat/`
 
 ---
 
@@ -387,6 +449,8 @@
   - [ ] プロフィール情報が表示・編集・保存できる
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-012
+- **parallel-group**: 6-A
+- **影響ファイル**: `frontend/src/pages/profile/`
 
 ### TASK-061: 設定画面（フロントエンド）
 - **優先度**: 低
@@ -397,6 +461,8 @@
   - [ ] ログアウトボタンが動作する
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-013, TASK-021
+- **parallel-group**: 6-A
+- **影響ファイル**: `frontend/src/pages/settings/`
 
 ---
 
@@ -412,9 +478,26 @@
   - [ ] 未認証時にログイン画面へリダイレクトされる
 - **ステータス**: `[ ]`
 - **ブロック**: TASK-002
+- **parallel-group**: -
+- **影響ファイル**: `frontend/src/components/layout/`, `frontend/src/router/`
+
+---
+
+## 並列グループ一覧
+
+| グループ | タスク | 条件 |
+|---|---|---|
+| **0-A** | TASK-001, TASK-002, TASK-005 | 同時実行可（依存なし） |
+| **1-A** | TASK-010T, TASK-012, TASK-013 | TASK-010完了後に同時実行可 |
+| **3-A** | TASK-030, TASK-031 | TASK-021完了後・影響ファイル分離 |
+| **4-A** | TASK-040（Phase 2〜3と並列可） | TASK-004完了後・影響ファイル分離 |
+| **5-A** | TASK-050（Phase 2と並列可） | TASK-001完了後・影響ファイル分離 |
+| **5-B** | TASK-051, TASK-053, TASK-054 | TASK-050T完了後に同時実行可 |
+| **6-A** | TASK-060, TASK-061 | 各ブロック解消後・影響ファイル分離 |
 
 ---
 
 ## 更新履歴
 - 2026-02-09: 初版作成（MVP全チケット起票）
 - 2026-02-28: テストタスク追加（TASK-010T〜054T）
+- 2026-03-15: 並列開発対応（parallel-group・影響ファイルフィールド追加、並列グループ一覧追加）
