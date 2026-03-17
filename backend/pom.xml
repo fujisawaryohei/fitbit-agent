@@ -142,6 +142,19 @@
     
     <build>
         <plugins>
+            <!-- Lombok annotation processor for javac -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -167,6 +180,17 @@
                         </goals>
                     </execution>
                 </executions>
+            </plugin>
+            <!-- Run Spock Specification classes -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <includes>
+                        <include>**/*Spec.class</include>
+                        <include>**/*Test.class</include>
+                    </includes>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.flywaydb</groupId>

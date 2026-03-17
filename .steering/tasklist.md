@@ -89,12 +89,12 @@
 - **機能ID**: FR-001
 - **概要**: TASK-010 で実装した AuthService / TokenEncryptionService の Spock 単体テストを作成する
 - **受入条件**:
-  - [ ] `TokenEncryptionService` の暗号化・復号化テストが通る
-  - [ ] `AuthService.buildAuthorizationUrl()` のテストが通る
-  - [ ] `AuthService.handleCallback()` のテストが通る（FitbitOAuthClient をモック）
-  - [ ] `AuthService.refreshToken()` のテストが通る
-  - [ ] `mvn test` が成功する
-- **ステータス**: `[ ]`
+  - [x] `TokenEncryptionService` の暗号化・復号化テストが通る
+  - [x] `AuthService.buildAuthorizationUrl()` のテストが通る
+  - [x] `AuthService.handleCallback()` のテストが通る（FitbitOAuthClient をモック）
+  - [x] `AuthService.refreshToken()` のテストが通る
+  - [x] `mvn test` が成功する
+- **ステータス**: `[x]`
 - **ブロック**: TASK-010
 - **parallel-group**: 1-A
 - **影響ファイル**: `backend/src/test/groovy/.../auth/`

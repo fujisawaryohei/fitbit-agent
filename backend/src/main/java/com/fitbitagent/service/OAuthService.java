@@ -51,6 +51,7 @@ public class OAuthService {
         User user = userMapper.findByFitbitUserId(userId)
                 .orElseGet(() -> {
                     User newUser = User.builder()
+                            .id(UUID.randomUUID())
                             .fitbitUserId(userId)
                             .build();
                     userMapper.insert(newUser);
@@ -68,6 +69,7 @@ public class OAuthService {
                         oAuthTokenMapper.update(token);
                     },
                     () -> oAuthTokenMapper.insert(OAuthToken.builder()
+                            .id(UUID.randomUUID())
                             .userId(user.getId())
                             .accessToken(encryptedAccessToken)
                             .refreshToken(encryptedRefreshToken)
