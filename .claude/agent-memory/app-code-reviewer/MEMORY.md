@@ -126,6 +126,39 @@
     taxonomy defined in architecture.md 8.1. Always cross-check the error code table when reviewing
     GlobalExceptionHandler changes.
 
+- Session 12 (TASK-012 — UserController, UserService, UpdateProfileRequest, UserProfileResponse, ResourceNotFoundException, FitbitProfileResponse):
+  - ARCHITECTURE Must: UserService injected WebClient directly and called Fitbit API inline.
+    Service layer must NOT call external APIs directly — must delegate to Integration Layer (FitbitApiClient).
+    This is a recurring risk pattern: when adding new external API calls, always check which layer owns it.
+  - SECURITY Must: session.getAttribute("userId") returned null is not guarded in UserController.
+    Both getProfile() and updateProfile() pass null directly to service, which reaches the DB layer.
+    Pattern: session null checks must always be present in Controllers using session-based auth.
+  - GlobalExceptionHandler Session 10 Must items STILL UNRESOLVED: ErrorResponse DTO not created,
+    MethodArgumentNotValidException handler missing. Now critical since @Valid is in use.
+  - Should: updateProfile() with null activityLevel silently overwrites existing user data.
+    Fitbit profile has no activityLevel, so calling updateProfile(..., null) destroys user-set values.
+  - Should: PUT vs PATCH ambiguity — all fields are optional but PUT semantics imply full replacement.
+  - UserController correctly placed under /api/users with UserService — good layer separation.
+  - OAuthService Session 8/11 Must carryover (RuntimeException → ResourceNotFoundException) still unresolved.
+  - Test coverage: still zero. src/test/groovy/ remains empty across all tasks.
+
+- Session 11 (TASK-013 — SecurityConfig, AuthController logout, OAuthService fixes):
+  - SecurityConfig: actual file (30 lines) was missing `.exceptionHandling(authenticationEntryPoint)`
+    that was shown in the review-request snippet. REST APIs must explicitly set HttpStatusEntryPoint(401)
+    because Spring Security default is 302 redirect (browser-oriented). This is a common Spring Security
+    misconfiguration for SPA+REST setups.
+  - SecurityConfig: `POST /api/auth/logout` is CSRF-protected by default. Correct design, but
+    needs frontend to send X-XSRF-TOKEN header. Raised as Should to discuss whether logout should be
+    CSRF-exempt given SPA usage patterns.
+  - OAuthService.java: Session 8 Must items CONFIRMED RESOLVED — oAuthTokenMapper.update(token) now
+    present in refreshToken(), and handleCallback ifPresentOrElse now calls oAuthTokenMapper.update(token).
+  - OAuthService.java: RuntimeException → ResourceNotFoundException still unresolved (Session 8 carryover).
+  - No test files exist yet anywhere under src/test/groovy/ — zero test coverage across all tasks.
+    This is a persistent gap that must be closed as a project-wide concern.
+  - Pattern: User tends to submit incomplete implementations without running the app to verify
+    actual behavior. SecurityConfig mismatch between review-request snippet and actual file
+    suggests the snippet may have been written prospectively without being applied to the file.
+
 ## User Profile
 - Java beginner — needs explanations of underlying principles, not just fix instructions
 - Learning through pair programming style
