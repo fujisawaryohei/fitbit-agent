@@ -17,16 +17,19 @@ import com.fitbitagent.repository.UserMapper;
 
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OAuthService {
-    
+
     private final FitbitConfig fitbitConfig;
     private final FitbitOAuthClient fitbitOAuthClient;
     private final UserMapper userMapper;
     private final OAuthTokenMapper oAuthTokenMapper;
     private final TokenEncryptionService tokenEncryptionService;
+    private final UserService userService;
 
     public String buildAuthorizationUrl(String state) {
         return UriComponentsBuilder.fromHttpUrl(fitbitConfig.getAuthorizationUri())
@@ -48,8 +51,10 @@ public class OAuthService {
         String userId = (String) tokenResponse.get("user_id");
         String scope = (String) tokenResponse.get("scope");
 
+        boolean[] isNewUser = {false};
         User user = userMapper.findByFitbitUserId(userId)
                 .orElseGet(() -> {
+                    isNewUser[0] = true;
                     User newUser = User.builder()
                             .fitbitUserId(userId)
                             .build();
@@ -77,6 +82,14 @@ public class OAuthService {
                 );
 
         session.setAttribute("userId", user.getId());
+
+        if (isNewUser[0]) {
+            try {
+                userService.fetchAndSaveProfileFromFitbit(user.getId(), accessToken);
+            } catch (Exception e) {
+                log.warn("Failed to fetch Fitbit profile on first login for userId={}. Profile can be synced later.", user.getId(), e);
+            }
+        }
 
         return user;
     }
