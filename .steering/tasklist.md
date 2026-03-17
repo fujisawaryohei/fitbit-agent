@@ -79,7 +79,7 @@
   - [ ] `GET /api/auth/login` でFitbit認可URLにリダイレクトされる
   - [ ] `GET /api/auth/callback` でトークン取得・暗号化保存・セッション生成が行われる
   - [ ] トークン自動リフレッシュが動作する
-- **ステータス**: `[>]`
+- **ステータス**: `[x]`
 - **ブロック**: TASK-001, TASK-004
 - **parallel-group**: -
 - **影響ファイル**: `backend/src/main/java/.../auth/`, `backend/src/main/java/.../security/`
