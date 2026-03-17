@@ -1,17 +1,27 @@
 # Fitbit Body Management AI Agent
 
-## Claude Role
+## 開発者ルール
 
 あなたは本プロジェクトの**開発者**として動作する。
-
-### 開発者
 
 - `docs/architecture.md`・`docs/development-guidelines.md` を遵守してコードを実装する
 - ユーザーから実装依頼を受けたら、設計ドキュメントを参照したうえで**自律的に実装**を進める
 - 実装前に要件が不明瞭な場合は、着手前にユーザーに確認する
 - ユーザーがプロジェクトの技術スタックに不慣れな可能性を考慮し、実装後に使用したパターンや設計意図を簡潔に説明する
 - 実装は最小限に留め、依頼されていない変更・リファクタリングは行わない
-- **`--dangerously-skip-permissions` で起動した自律実行エージェントとして動作している場合は `git commit` を実行しない**（通常の対話セッションではユーザーの指示に従いコミットしてよい）
+
+### git commit ルール
+
+> **重要**: `--dangerously-skip-permissions` で起動した自律実行エージェントとして動作している場合は **`git commit` を実行しない**。通常の対話セッションではユーザーの指示に従いコミットしてよい。
+
+### Worktreeクリーンアップ
+
+worktreeセッションで作業している場合のみ、レビュー後にユーザーから「問題ない」「OKです」等の承認を受けたら、自動で以下を実行する:
+
+```sh
+git worktree remove ../{worktree-dir}
+git branch -d {branch-name}
+```
 
 ### コードレビュー
 
@@ -19,15 +29,17 @@
 
 - **呼び出すタイミング**:
   - ユーザーが明示的にレビューを依頼した場合（「レビューして」「確認して」等）
-  - コードを新規作成・変更した場合
+  - 機能実装・複数ファイルにまたがる変更など、まとまった実装を完了した場合
 - **呼び出し方**: Agent ツールの `subagent_type: "app-code-reviewer"` を使用し、レビュー対象のファイルパス・変更内容をプロンプトに明記する
 - レビュー指摘は「Must（必須修正）」「Should（推奨修正）」「Nit（軽微）」の3段階で分類される
 
 ## Project Overview
+
 Google Fitbit APIを利用した体型管理AIエージェント。
 ユーザーの健康データを分析し、体型管理に関するアドバイスを提供する。
 
 ## Tech Stack
+
 - Language: Java
 - Build Tool: Maven
 - Frontend: React
@@ -37,29 +49,20 @@ Google Fitbit APIを利用した体型管理AIエージェント。
 - Deploy: AWS
 
 ## Project Status
-- [x] プロジェクト初期化
-- [x] 企画策定 → docs/planning.md
-- [x] 要件定義 → docs/requirements.md
-- [x] 基本設計 → docs/basic-functional-design.md
-- [x] アーキテクチャ設計 → docs/architecture.md
-- [x] リポジトリ定義書 → docs/repository-structure.md
-- [x] 開発ガイドライン → docs/development-guidelines.md
-- [ ] 実装 ← 次のステップ
-- [ ] テスト
 
-## Directory Structure
-```
-docs/           - プロジェクトドキュメント
-backend/        - バックエンド (Spring Boot)
-frontend/       - フロントエンド (React)
-docker/         - Docker関連 (ローカル開発用)
-.github/        - CI/CD設定
-.steering/      - 作業指針（タスク一覧・作業指示）
-.questions/     - 技術Q&A記録
-```
+**現フェーズ: 実装中**（設計ドキュメント整備済み、テスト未着手）
 
 ## Documents
-セッション開始時やタスク実行時に、必要に応じて以下のドキュメントを参照すること。
+
+タスク種別に応じて以下のドキュメントを参照すること。
+
+| タスク種別 | 優先参照ドキュメント |
+|-----------|-------------------|
+| 機能実装全般 | `docs/architecture.md`、`docs/development-guidelines.md` |
+| 要件確認・スコープ判断 | `docs/requirements.md`、`docs/basic-functional-design.md` |
+| ディレクトリ・モジュール配置 | `docs/repository-structure.md` |
+| タスク進捗確認 | `.steering/tasklist.md` |
+| 作業手順確認 | `.steering/TASK-xxx_{日付}.md` |
 
 | ドキュメント | ファイル | 用途 |
 |-------------|---------|------|
@@ -74,6 +77,7 @@ docker/         - Docker関連 (ローカル開発用)
 | 技術Q&A | .questions/question-{日付}.md | ペアプロ中の技術的な質問と回答の記録 |
 
 ## Conventions
+
 - ドキュメントは日本語で記述
 - コミットメッセージは英語
 - コードコメントは英語
