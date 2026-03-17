@@ -43,7 +43,23 @@ description: 基本機能設計書（docs/basic-functional-design.md）を対話
 - AI生成フロー
 mermaid 記法で図示する
 
+### Step 6: REST APIエンドポイント設計
+
+機能一覧（Step 1）と画面一覧（Step 2）をもとに、バックエンドが提供するAPIの一覧を定義する。
+このテーブルが `create-architecture` でのController設計と、`task-assigner` での実装指示の基準になる。
+
+各エンドポイントについて確認する:
+- HTTPメソッドとパス
+- 対応する機能ID（FR-xxx）
+- どの Controller が担当するか
+- リクエスト・レスポンスの概要
+
 ## 出力
 
 `template.md` の構成で設計書を生成し、`docs/basic-functional-design.md` として保存する。
 末尾の更新履歴に今日の日付を追記する。
+
+## 次のステップ
+
+基本機能設計書が完成したら `/create-architecture` を使ってアーキテクチャ設計書を作成する。
+`docs/basic-functional-design.md` のデータモデル・画面構成を参照しながら技術構成を設計する。

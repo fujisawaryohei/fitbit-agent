@@ -40,3 +40,8 @@ description: 新プロジェクトの企画書（docs/planning.md）を対話形
 
 収集した情報をもとに `template.md` の構成で企画書を生成し、`docs/planning.md` として保存する。
 末尾の更新履歴に今日の日付と「初版作成」を追記する。
+
+## 次のステップ
+
+企画書が完成したら `/create-requirements` を使って要件定義書を作成する。
+`docs/planning.md` の機能リスト・技術スタックを参照しながら進める。
