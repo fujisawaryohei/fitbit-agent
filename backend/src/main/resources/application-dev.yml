@@ -29,9 +29,10 @@ fitbit:
   token-uri: https://api.fitbit.com/oauth2/token
 
 app:
-  token-encryption-key: ${TOKEN_ENCRYPTION_KEY:dev-encryption-key-32bytes-pad!}
+  token-encryption-key: ${TOKEN_ENCRYPTION_KEY}
 
 mybatis:
+  type-handlers-package: com.fitbitagent.typehandler
   configuration:
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
 
