@@ -21,30 +21,30 @@ US-02, US-04〜07, US-09〜15
 ## Phase 1: プロジェクトセットアップ
 
 ### Step 1: pyproject.toml の作成
-- [ ] `pyproject.toml` を workspace root に作成
-- [ ] `requires-python = ">=3.11"` を設定
-- [ ] 依存ライブラリを定義（`tech-stack-decisions.md` の依存ライブラリ一覧を参照）
+- [x] `pyproject.toml` を workspace root に作成
+- [x] `requires-python = ">=3.11"` を設定
+- [x] 依存ライブラリを定義（`tech-stack-decisions.md` の依存ライブラリ一覧を参照）
   - langgraph, langchain-core, langchain-anthropic, langfuse
   - sentence-transformers, psycopg2-binary, pgvector
   - python-dotenv, httpx, pydantic
-- [ ] dev 依存: pytest, hypothesis, mypy, ruff
+- [x] dev 依存: pytest, hypothesis, mypy, ruff
 
 ### Step 2: 環境設定ファイルの作成
-- [ ] `.env.example` を作成（`logical-components.md` の環境変数一覧を参照）
+- [x] `.env.example` を作成（`logical-components.md` の環境変数一覧を参照）
   - ANTHROPIC_API_KEY, FITBIT_*, PGVECTOR_DSN, LANGFUSE_* を列挙
-- [ ] `.gitignore` に `.env` を追加
-- [ ] `.env` をコピーして実際の値を設定（gitignore 済み）
+- [x] `.gitignore` に `.env` を追加
+- [x] `.env` をコピーして実際の値を設定（gitignore 済み）
 
 ### Step 3: docker-compose.yml の作成
-- [ ] `docker-compose.yml` を workspace root に作成
-- [ ] pgvector サービス: `pgvector/pgvector:pg16`、ポート `5432`
-- [ ] LangFuse サービス: `langfuse/langfuse:latest`、ポート `3000`
-- [ ] LangFuse 専用 DB: `postgres:16`、ポート `5433`
-- [ ] 各サービスの環境変数・ボリューム・depends_on を設定
+- [x] `docker-compose.yml` を workspace root に作成
+- [x] pgvector サービス: `pgvector/pgvector:pg16`、ポート `5432`
+- [x] LangFuse サービス: `langfuse/langfuse:2`、ポート `3000`
+- [x] LangFuse 専用 DB: `postgres:16`、ポート `5433`
+- [x] 各サービスの環境変数・ボリューム・depends_on を設定
 
 ### Step 4: ディレクトリ構造の作成
-- [ ] `agent/`, `tools/`, `fitbit/`, `memory/`, `tests/` ディレクトリを作成
-- [ ] 各ディレクトリに `__init__.py` を追加
+- [x] `agent/`, `tools/`, `fitbit/`, `memory/`, `tests/` ディレクトリを作成
+- [x] 各ディレクトリに `__init__.py` を追加
 
 ---
 
