@@ -70,11 +70,11 @@ US-02, US-04〜07, US-09〜15
 ## Phase 3: インフラ層（メモリ・DB）
 
 ### Step 7: DB 初期化 SQL の作成
-- [ ] `memory/init.sql` を作成
-- [ ] pgvector extension 有効化: `CREATE EXTENSION IF NOT EXISTS vector;`
-- [ ] memories テーブル定義（`logical-components.md` LC-03 の DDL を参照）
+- [x] `memory/init.sql` を作成
+- [x] pgvector extension 有効化: `CREATE EXTENSION IF NOT EXISTS vector;`
+- [x] memories テーブル定義（`logical-components.md` LC-03 の DDL を参照）
   - `id UUID`, `session_id TEXT`, `content TEXT`, `embedding vector(1024)`, タイムスタンプ
-- [ ] `session_id` インデックスを作成
+- [x] `session_id` インデックスを作成
 
 ### Step 8: EmbeddingModel Singleton の実装
 - [ ] `memory/embedding.py` を作成
