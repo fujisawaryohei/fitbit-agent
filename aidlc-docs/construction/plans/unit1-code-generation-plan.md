@@ -51,19 +51,19 @@ US-02, US-04〜07, US-09〜15
 ## Phase 2: ドメインエンティティ（US-依存なし）
 
 ### Step 5: AgentState の実装
-- [ ] `agent/state.py` を作成
-- [ ] `AgentState(BaseModel)` を実装（`domain-entities.md` 参照）
+- [x] `agent/state.py` を作成
+- [x] `AgentState(BaseModel)` を実装（`domain-entities.md` 参照）
   - `messages: Annotated[list[BaseMessage], add_messages]`
   - `session_id: str`
   - `model_config = {"arbitrary_types_allowed": True}`
 
 ### Step 6: その他エンティティの実装
-- [ ] `fitbit/models.py` を作成（FitbitData, TokenData）
-- [ ] `tools/models.py` を作成（WeightGoal, CalorieDeficitResult, WorkoutPlanInput, WorkoutPlan, WeeklyProgress, CalorieBalance）
-- [ ] `memory/models.py` を作成（MemoryEntry）
-- [ ] 全エンティティを Pydantic `BaseModel` で実装（`domain-entities.md` のコードを参照）
-- [ ] `WeightGoal` の `field_validator` を実装（pace 0.1〜1.0、target < current）
-- [ ] `CalorieDeficitResult` の `field_validator` を実装（deficit 200〜1000）
+- [x] `fitbit/models.py` を作成（FitbitData, TokenData）
+- [x] `tools/models.py` を作成（WeightGoal, CalorieDeficitResult, WorkoutPlanInput, WorkoutPlan, WeeklyProgress, CalorieBalance）
+- [x] `memory/models.py` を作成（MemoryEntry）
+- [x] 全エンティティを Pydantic `BaseModel` で実装（`domain-entities.md` のコードを参照）
+- [x] `WeightGoal` の `field_validator` を実装（pace 0.1〜1.0、target < current）
+- [x] `CalorieDeficitResult` の `field_validator` を実装（deficit 200〜1000）
 
 ---
 
