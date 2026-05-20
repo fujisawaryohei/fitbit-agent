@@ -18,7 +18,7 @@ US-02, US-04〜07, US-09〜15
 
 ---
 
-## Phase 1: プロジェクトセットアップ
+## Phase 1: プロジェクトセットアップ ✅
 
 ### Step 1: pyproject.toml の作成
 - [x] `pyproject.toml` を workspace root に作成
@@ -48,12 +48,12 @@ US-02, US-04〜07, US-09〜15
 
 ---
 
-## Phase 2: ドメインエンティティ（US-依存なし）
+## Phase 2: ドメインエンティティ ✅
 
 ### Step 5: AgentState の実装
 - [x] `agent/state.py` を作成
 - [x] `AgentState(BaseModel)` を実装（`domain-entities.md` 参照）
-  - `messages: Annotated[list[BaseMessage], add_messages]`
+  - `messages: Annotated[list[AnyMessage], add_messages]`
   - `session_id: str`
   - `model_config = {"arbitrary_types_allowed": True}`
 
@@ -67,7 +67,7 @@ US-02, US-04〜07, US-09〜15
 
 ---
 
-## Phase 3: インフラ層（メモリ・DB）
+## Phase 3: インフラ層（メモリ・DB） ✅
 
 ### Step 7: DB 初期化 SQL の作成
 - [x] `memory/init.sql` を作成
@@ -77,32 +77,20 @@ US-02, US-04〜07, US-09〜15
 - [x] `session_id` インデックスを作成
 
 ### Step 8: EmbeddingModel Singleton の実装
-- [ ] `memory/embedding.py` を作成
-- [ ] `_model` モジュール変数（初期値 None）
-- [ ] `get_embedding_model()` 関数: 初回のみ `SentenceTransformer("intfloat/multilingual-e5-large")` を初期化（PATTERN-01 参照）
-- [ ] `embed(text: str) -> list[float]` 関数: `normalize_embeddings=True` でエンコード
+- [x] `memory/embedding.py` を作成
+- [x] `_model` モジュール変数（初期値 None）
+- [x] `get_embedding_model()` 関数: 初回のみ `SentenceTransformer("intfloat/multilingual-e5-large")` を初期化（PATTERN-01 参照）
+- [x] `embed(text: str) -> list[float]` 関数: `normalize_embeddings=True` でエンコード
 
 ### Step 9: ConnectionPool Singleton の実装
-- [ ] `memory/connection_pool.py` を作成
-- [ ] `_pool` モジュール変数（初期値 None）
-- [ ] `get_pool()` 関数: `SimpleConnectionPool(minconn=1, maxconn=5, dsn=os.getenv("PGVECTOR_DSN"))` を返す（PATTERN-02 参照）
-- [ ] `get_connection()` / `release_connection(conn)` 関数
-
-### Step 10: MemoryManager の実装
-- [ ] `memory/manager.py` を作成
-- [ ] `save_memory(session_id, content)` の実装
-  - `embed(content)` でベクトル生成
-  - pgvector に upsert（同一 session_id は上書き）
-  - 接続は `get_connection()` / `finally: release_connection()` パターン（PATTERN-02）
-  - エラー時は `logging.error` してサイレント失敗（PATTERN-03）
-- [ ] `search_memories(session_id, query, limit=3)` の実装
-  - `embed(query)` でクエリベクトル生成
-  - `ORDER BY embedding <=> %s LIMIT %s` でコサイン類似度検索
-  - エラー時は空リスト返却（PATTERN-03）
+- [x] `memory/connection_pool.py` を作成
+- [x] `_pool` モジュール変数（初期値 None）
+- [x] `get_pool()` 関数: `SimpleConnectionPool(minconn=1, maxconn=5, dsn=os.getenv("PGVECTOR_DSN"))` を返す（PATTERN-02 参照）
+- [x] `get_connection()` / `release_connection(conn)` 関数
 
 ---
 
-## Phase 4: Fitbit クライアント（US-02, US-04〜07）
+## Milestone 1: Fitbit API からデータ取得できる
 
 ### Step 11: FitbitClient の実装
 - [ ] `fitbit/client.py` を作成
@@ -120,13 +108,15 @@ US-02, US-04〜07, US-09〜15
 - [ ] `get_heart_rate(date, period)` → heart_rate_avg
 - [ ] `get_food_log(date)` → calories_in
 
+### Milestone 1 動作確認
+- [ ] `python -c "from fitbit.client import FitbitClient; c = FitbitClient(); print(c.get_activities())"` で実際のFitbitデータが返ることを確認
+
 ---
 
-## Phase 5: LangGraph ツール（US-04〜07, US-09〜13）
+## Milestone 2: ツールが動く
 
 ### Step 12: Fitbit ツールの実装
 - [ ] `tools/fitbit_tools.py` を作成
-- [ ] `FitbitClient` のインスタンスを取得する依存関係を定義
 - [ ] `@tool` デコレータで以下を実装
   - `get_steps(date: str = "today", period: str | None = None) -> str`
   - `get_calories_burned(date: str = "today", period: str | None = None) -> str`
@@ -144,13 +134,16 @@ US-02, US-04〜07, US-09〜15
     - `CalorieDeficitResult` で結果を構造化して返す
   - `generate_home_workout_plan(daily_deficit_kcal: int, fitness_level: str, available_days_per_week: int, duration_minutes: int) -> str`
     - BLM-02 の LLM 完全委任パターンで実装
-    - ツール内で LLM を呼び出してプランを生成
   - `get_weekly_progress(current_weight_kg: float, start_weight_kg: float, target_pace_kg_per_week: float, weeks_elapsed: int) -> str`
     - BLM-04 のアルゴリズムを実装
 
+### Milestone 2 動作確認
+- [ ] `python -c "from tools.fitbit_tools import get_steps; print(get_steps.invoke({}))"` で歩数が返ることを確認
+- [ ] `python -c "from tools.planning_tools import calculate_calorie_deficit; print(calculate_calorie_deficit.invoke({'current_weight_kg': 65, 'target_weight_kg': 58}))"` で計算結果が返ることを確認
+
 ---
 
-## Phase 6: LangFuse セットアップ
+## Milestone 3-1: LLM が応答を返す
 
 ### Step 14: LangFuse CallbackHandler の実装
 - [ ] `agent/langfuse_setup.py` を作成
@@ -158,60 +151,93 @@ US-02, US-04〜07, US-09〜15
   - `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` を `.env` から読み込む
   - `langfuse.callback.CallbackHandler` を返す
 
+### Step 15-1: agent_node の実装
+- [ ] `agent/nodes.py` を作成
+- [ ] `agent_node(state: AgentState) -> dict` の実装
+  - `ChatAnthropic` でLLMを呼び出す（モデル: `claude-sonnet-4-6`）
+  - ツール一覧を `bind_tools` でバインド
+  - メッセージ履歴を渡して応答を生成
+
+### Step 16-1: 最小グラフの実装
+- [ ] `agent/graph.py` を作成
+- [ ] `StateGraph(AgentState)` で最小グラフを定義
+  - `START → agent_node → END`
+- [ ] `InMemorySaver()` をチェックポインターとしてコンパイル
+
+### Milestone 3-1 動作確認
+- [ ] `python -c "from agent.graph import agent; ..."` でLLMが応答を返すことを確認
+
 ---
 
-## Phase 7: LangGraph ノード・グラフ（US-09, US-14, US-15）
+## Milestone 3-2: ツール呼び出しが動く
 
-### Step 15: LangGraph ノードの実装
-- [ ] `agent/nodes.py` を作成
-- [ ] `memory_inject_node(state: AgentState) -> dict` の実装
-  - `MemoryManager.search_memories()` で関連メモリを取得
-  - メモリをシステムプロンプトの先頭に注入した messages を返す
-- [ ] `agent_node(state: AgentState) -> dict` の実装
-  - `langchain-anthropic` の `ChatAnthropic` でLLMを呼び出す
-  - モデル: `claude-sonnet-4-6`
-  - ツール一覧を bind_tools でバインド
-  - メッセージ履歴を渡して応答を生成
-- [ ] `tool_node(state: AgentState) -> dict` の実装
-  - LangGraph 組み込みの `ToolNode` を使用、または手動実装
-  - バインドされたツールを実行
-- [ ] `memory_save_node(state: AgentState) -> dict` の実装
-  - 会話全体を LLM で要約（BLM-05 参照）
-  - `MemoryManager.save_memory()` で pgvector に保存
+### Step 15-2: tool_node + should_continue の実装
+- [ ] `agent/nodes.py` に追加
+- [ ] `tool_node` の実装（LangGraph 組み込みの `ToolNode` を使用）
 - [ ] `should_continue(state: AgentState) -> str` の実装
   - 最後のメッセージがツール呼び出しなら `"tool_node"` を返す
   - それ以外なら `"memory_save_node"` を返す
 
-### Step 16: LangGraph グラフの実装
-- [ ] `agent/graph.py` を作成
-- [ ] `StateGraph(AgentState)` でグラフを定義
-- [ ] ノードを追加: `memory_inject_node`, `agent_node`, `tool_node`, `memory_save_node`
-- [ ] エッジを定義（BLM-08 のフロー図を参照）
-  - `START → memory_inject_node → agent_node`
-  - `agent_node` に条件分岐（`should_continue`）: `tool_node` or `memory_save_node`
-  - `tool_node → agent_node`（ループ）
-  - `memory_save_node → END`
-- [ ] `InMemorySaver()` をチェックポインターとしてコンパイル
-- [ ] `compile()` でグラフを確定、`agent` 変数に格納
+### Step 16-2: グラフに tool_node を追加
+- [ ] `agent/graph.py` を更新
+- [ ] `tool_node` をグラフに追加
+- [ ] `agent_node` に条件分岐（`should_continue`）: `tool_node` or `memory_save_node`
+- [ ] `tool_node → agent_node`（ループ）を追加
+
+### Milestone 3-2 動作確認
+- [ ] 「今日の歩数を教えて」で `get_steps` ツールが呼ばれることを確認
 
 ---
 
-## Phase 8: エントリポイント
+## Milestone 3-3: メモリ・DB が動く
+
+### Step 10: MemoryManager の実装
+- [ ] `memory/manager.py` を作成
+- [ ] `save_memory(session_id, content)` の実装
+  - `embed(content)` でベクトル生成
+  - pgvector に upsert（同一 session_id は上書き）
+  - 接続は `get_connection()` / `finally: release_connection()` パターン（PATTERN-02）
+  - エラー時は `logging.error` してサイレント失敗（PATTERN-03）
+- [ ] `search_memories(session_id, query, limit=3)` の実装
+  - `embed(query)` でクエリベクトル生成
+  - `ORDER BY embedding <=> %s LIMIT %s` でコサイン類似度検索
+  - エラー時は空リスト返却（PATTERN-03）
+
+### Step 15-3: memory ノードの実装
+- [ ] `agent/nodes.py` に追加
+- [ ] `memory_inject_node(state: AgentState) -> dict` の実装
+  - `search_memories()` で関連メモリを取得
+  - メモリをシステムプロンプトの先頭に注入した messages を返す
+- [ ] `memory_save_node(state: AgentState) -> dict` の実装
+  - 会話全体を LLM で要約（BLM-05 参照）
+  - `save_memory()` で pgvector に保存
+
+### Step 16-3: 完全なグラフの実装
+- [ ] `agent/graph.py` を更新して完全なグラフを組み立てる
+  - `START → memory_inject_node → agent_node`
+  - `memory_save_node → END`
 
 ### Step 17: main.py の実装
 - [ ] `main.py` を作成
 - [ ] 起動時に `get_embedding_model()` を呼び出してモデルをウォームアップ
 - [ ] インタラクティブな REPL ループを実装
-  - ユーザー入力を受け付ける
-  - `session_id` を設定（例: UUID or 固定値）
+  - `session_id` を設定（UUID）
   - `agent.stream()` でストリーミング実行（PATTERN-05 参照）
   - `config={"configurable": {"thread_id": session_id}, "callbacks": [get_langfuse_handler()]}` を渡す
   - `agent` チャンクの内容をターミナルにリアルタイム出力
-- [ ] `docker-compose up -d` 後に `python main.py` で起動できることを確認
+
+### Milestone 3-3 動作確認
+- [ ] `docker-compose up -d` で全コンテナ起動
+- [ ] `psql` で `memory/init.sql` を実行して memories テーブルを作成
+- [ ] `python main.py` を実行して以下を確認
+  1. 「今日の歩数を教えて」→ `get_steps` ツールが呼ばれる
+  2. 「現在65kg、目標58kgにしたい」→ `calculate_calorie_deficit` が呼ばれる
+  3. 再起動後に同一 session_id で会話 → Long-term memory が機能していることを確認
+- [ ] LangFuse ダッシュボード（`http://localhost:3000`）でトレースを確認
 
 ---
 
-## Phase 9: テスト（PBT 含む）
+## Milestone 4: テスト
 
 ### Step 18: ユニットテスト — ビジネスロジック（US-10, US-13）
 - [ ] `tests/test_planning_tools.py` を作成
@@ -255,48 +281,5 @@ US-02, US-04〜07, US-09〜15
 - [ ] `search_memories`: コサイン類似度クエリが実行されることを確認
 - [ ] Fallback: DB 接続エラー時に空リストが返ることを確認（PATTERN-03）
 
----
-
-## Phase 10: 動作確認
-
-### Step 22: Docker 起動 & DB 初期化
-- [ ] `docker-compose up -d` で pgvector と LangFuse を起動
-- [ ] `psql` で `memory/init.sql` を実行して memories テーブルを作成
-- [ ] LangFuse ブラウザ (`http://localhost:3000`) でプロジェクトを作成し API キーを取得
-
-### Step 23: エンドツーエンド動作確認
-- [ ] `python main.py` を実行
-- [ ] 以下のシナリオで動作確認
-  1. 「今日の歩数を教えて」→ `get_steps` ツールが呼ばれる
-  2. 「現在65kg、目標58kgにしたい」→ `calculate_calorie_deficit` が呼ばれる
-  3. 「週3回30分で運動プランを作って」→ `generate_home_workout_plan` が呼ばれる
-  4. 同一セッションで2回目の会話 → Short-term memory が機能していることを確認
-  5. 再起動後に同一 session_id で会話 → Long-term memory が機能していることを確認
-- [ ] LangFuse ダッシュボードでトレースを確認
-- [ ] テストカバレッジ 80% 以上を確認: `pytest --cov=. --cov-report=term`
-
----
-
-## 実装優先順位（依存関係順）
-
-```
-Step 1〜4 (セットアップ)
-  ↓
-Step 5〜6 (エンティティ)
-  ↓
-Step 7〜10 (インフラ: DB・Embedding・ConnectionPool・MemoryManager)
-  ↓
-Step 11 (FitbitClient)
-  ↓
-Step 12〜13 (ツール) ← FitbitClient に依存
-  ↓
-Step 14 (LangFuse)
-  ↓
-Step 15〜16 (ノード・グラフ) ← 全ツールに依存
-  ↓
-Step 17 (main.py)
-  ↓
-Step 18〜21 (テスト)
-  ↓
-Step 22〜23 (動作確認)
-```
+### Step 22: カバレッジ確認
+- [ ] `pytest --cov=. --cov-report=term` でカバレッジ 80% 以上を確認

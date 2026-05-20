@@ -179,3 +179,17 @@
 **Context**: CONSTRUCTION - Unit 1 完了 → Unit 2 Functional Design 開始
 
 ---
+
+## Code Generation Unit 1 - Plan 再編成
+**Timestamp**: 2026-05-19T06:00:00Z
+**User Input**: "動く最小単位で実装して実際に動かして動作確認して次へいきたい。それに合わせてStepも再度順序変えられますか？"
+**AI Response**: unit1-code-generation-plan.md を Milestone 単位に再編成。Phase 3〜10 を廃止し、以下の構成に変更:
+- Milestone 1: Fitbit API からデータ取得できる（Step 11 + 動作確認）
+- Milestone 2: ツールが動く（Step 12〜13 + 動作確認）
+- Milestone 3-1: LLM が応答を返す（Step 14, 15-1, 16-1 + 動作確認）
+- Milestone 3-2: ツール呼び出しが動く（Step 15-2, 16-2 + 動作確認）
+- Milestone 3-3: メモリ・DB が動く（Step 15-3, 16-3, 17 + 動作確認）
+- Milestone 4: テスト（Step 18〜22）
+**Context**: CONSTRUCTION - Code Generation Unit 1 Plan 再編成（小さく動かしながら進めるアプローチに変更）
+
+---
