@@ -1,12 +1,14 @@
+
 import textwrap
 
 from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
-from langchain_core.messages import AIMessage, AnyMessage, SystemMessage
+from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
 from langgraph.graph import END
 from langgraph.prebuilt import ToolNode
 
 from agent.state import AgentState
+from memory.manager import save_memory, search_memories
 from tools.fitbit_tools import (
     get_calories_burned,
     get_calories_in,
@@ -58,7 +60,10 @@ def agent_node(state: AgentState) -> dict[str, list[AnyMessage]]:
         - 「目標カロリー赤字を計算して」
         - 「運動プランを作成して」
     """).strip()
-    messages: list[AnyMessage] = [SystemMessage(content=system_prompt)] + state.messages
+    injected = [m.content for m in state.messages if isinstance(m, SystemMessage)]
+    conversation = [m for m in state.messages if not isinstance(m, SystemMessage)]
+    full_prompt = "\n\n".join([system_prompt] + injected)
+    messages: list[AnyMessage] = [SystemMessage(content=full_prompt)] + conversation
     response = _llm.invoke(messages)
     return {"messages": [response]}
 
@@ -71,3 +76,33 @@ def should_continue(state: AgentState) -> str:
     if isinstance(last_message, AIMessage) and last_message.tool_calls:
         return "tool_node"
     return END
+
+
+def memory_inject_node(state: AgentState) -> dict[str, list[AnyMessage]]:
+    last_human = next((m for m in reversed(state.messages) if isinstance(m, HumanMessage)), None)
+    query = last_human.content if last_human else ""
+    memories = search_memories(state.session_id, str(query))
+    if not memories:
+        return {"messages": []}
+    memory_text = "\n".join(f"- {m}" for m in memories)
+    injection = SystemMessage(content=f"【過去の記憶】\n{memory_text}")
+    return {"messages": [injection]}
+
+
+def memory_save_node(state: AgentState) -> dict[str, list[AnyMessage]]:
+    _summary_llm = ChatAnthropic(model_name="claude-haiku-4-5-20251001")  # type: ignore[call-arg]
+    conversation = "\n".join(
+        f"{'User' if isinstance(m, HumanMessage) else 'Assistant'}: {m.content}"
+        for m in state.messages
+        if isinstance(m, (HumanMessage, AIMessage))
+    )
+    summary_prompt = textwrap.dedent(f"""
+        以下の会話から、ユーザーの目標・好み・重要情報を日本語で簡潔に要約してください。
+        体重・運動・食事・健康状態など保存する価値のある情報がない場合は「SKIP」とだけ返してください。
+
+        {conversation}
+    """).strip()
+    summary = _summary_llm.invoke(summary_prompt)
+    if str(summary.content).strip() != "SKIP":
+        save_memory(state.session_id, str(summary.content))
+    return {"messages": []}
