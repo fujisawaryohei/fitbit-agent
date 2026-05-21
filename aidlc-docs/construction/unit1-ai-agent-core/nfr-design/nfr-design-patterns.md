@@ -9,7 +9,7 @@
 | Null Object / Fallback | MemoryManager | メモリ取得失敗時に空リストを返し続行 |
 | Error String Return | FitbitClient ツール群 | エラーをLLMへ委譲、例外を上位に伝播しない |
 | Streaming Iterator | LangGraphAgent | agent.stream() でトークン単位のリアルタイム出力 |
-| Callback Delegation | LangFuse統合 | CallbackHandlerをLangGraphに挿入、コードに侵襲しない |
+| 環境変数トレース | LangSmith統合 | 環境変数設定のみで自動トレース、コード変更不要 |
 
 ---
 
@@ -163,7 +163,6 @@ for chunk in agent.stream(
     {"messages": [HumanMessage(content=user_input)]},
     config={
         "configurable": {"thread_id": session_id},
-        "callbacks": [langfuse_handler]
     }
 ):
     if "agent" in chunk:
@@ -179,30 +178,21 @@ print()  # 改行
 
 ---
 
-## PATTERN-06: Callback Delegation — LangFuse
+## PATTERN-06: 環境変数トレース — LangSmith
 
 ### 問題
 LLMトレースのロジックをノードのビジネスロジックと混在させると、コードが複雑になる。
 
 ### 解決策
-`langfuse.callback.CallbackHandler` を LangGraph の `config` に渡すだけで、すべてのノード・ツール実行を自動トレース。
+`.env` に環境変数を設定するだけで、LangChain/LangGraph が自動でトレースを LangSmith に送信する。コード変更不要。
 
-```python
-from langfuse.callback import CallbackHandler
-
-langfuse_handler = CallbackHandler(
-    public_key=os.getenv("LANGFUSE_PUBLIC_KEY"),
-    secret_key=os.getenv("LANGFUSE_SECRET_KEY"),
-    host=os.getenv("LANGFUSE_HOST", "http://localhost:3000")
-)
-
-# agent.stream() または agent.invoke() 実行時に渡すだけ
-config = {
-    "configurable": {"thread_id": session_id},
-    "callbacks": [langfuse_handler]
-}
+```env
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=your_api_key
+LANGCHAIN_PROJECT=fitbit-agent
 ```
 
 ### 効果
-- ノード・ツールの全実行ログが LangFuse ダッシュボードに自動記録
+- ノード・ツールの全実行ログが LangSmith ダッシュボード（https://smith.langchain.com）に自動記録
 - ビジネスロジックコードへの変更なし
+- Docker サービスの追加不要

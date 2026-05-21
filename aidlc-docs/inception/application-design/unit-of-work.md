@@ -5,7 +5,7 @@
 - **ユニット数**: 3
 - **実装順序**: Unit 1 → Unit 2 → Unit 3
 - **デバッグ方針**: 各ユニットを print / ログで動作確認しながら段階的に実装
-- **観測ツール**: LangFuse（Docker セルフホスト）でエージェントのトレースを可視化
+- **観測ツール**: LangSmith（クラウド）でエージェントのトレースを可視化
 
 ---
 
@@ -19,7 +19,7 @@
 - **FitbitClient（データ取得メソッド）の実装** — ツールがFitbit APIを呼び出すために必須
 - Short-term memory（LangGraph MemorySaver）の組み込み
 - Long-term memory（PostgreSQL + pgvector）の実装
-- LangFuse による LLM トレース・デバッグ観測の組み込み
+- LangSmith による LLM トレース・デバッグ観測の組み込み
 
 ### 含まれるコンポーネント
 - `LangGraphAgent`（graph.py / nodes.py / state.py）
@@ -33,30 +33,20 @@
 > - Unit 2 で実装: `get_authorization_url()`, `exchange_code_for_token()`, `refresh_access_token()` など **OAuth2フロー**
 > - 同一クラス内に共存する。Unit 1 開発時はトークンを `.env` に手動設定して動作確認する
 
-### 観測ツール: LangFuse（Docker セルフホスト）
-- `docker-compose.yml` に LangFuse サービスを追加
-- Python: `langfuse` SDK + `CallbackHandler` を LangChain/LangGraph に組み込む
-- エージェントの各ノード実行・ツール呼び出し・LLM応答をトレースとして記録
-- ブラウザで `http://localhost:3000` からトレースを確認しながらデバッグ
+### 観測ツール: LangSmith（クラウド）
+- `.env` に環境変数を設定するだけで LangChain/LangGraph が自動でトレースを送信
+- コールバックの手動設定不要
 
-```python
-# LangFuse トレース組み込みイメージ
-from langfuse.callback import CallbackHandler
-
-langfuse_handler = CallbackHandler(
-    public_key="...",
-    secret_key="...",
-    host="http://localhost:3000"
-)
-
-# LangGraph 実行時に callback として渡す
-agent.stream(input, config={"callbacks": [langfuse_handler]})
+```env
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=your_api_key
+LANGCHAIN_PROJECT=fitbit-agent
 ```
 
 ### 開発検証方法（print デバッグ）
 - FastAPI なしで Python スクリプトとして単体実行
 - `agent.stream()` の出力をターミナルで print 確認
-- LangFuse ダッシュボードでトレースを可視化
+- LangSmith ダッシュボードでトレースを可視化
 
 ---
 
@@ -79,7 +69,7 @@ agent.stream(input, config={"callbacks": [langfuse_handler]})
 ### 開発検証方法
 - `uvicorn` でローカル起動
 - `curl` / `httpx` / Postman で各エンドポイントを手動テスト
-- LangFuse でエンドポイント経由のエージェントトレースを確認
+- LangSmith でエンドポイント経由のエージェントトレースを確認
 
 ---
 
@@ -102,14 +92,13 @@ agent.stream(input, config={"callbacks": [langfuse_handler]})
 
 ---
 
-## 技術スタック補足（LangFuse 追加）
+## 技術スタック補足（LangSmith）
 
 | 用途 | 技術 |
 |------|------|
-| LLM観測・トレース | LangFuse（Docker セルフホスト） |
-| LangFuse DB | PostgreSQL（LangFuse 専用、pgvector 用とは別コンテナ） |
+| LLM観測・トレース | LangSmith（クラウド、環境変数のみで設定） |
 
-### docker-compose.yml 構成（想定）
+### docker-compose.yml 構成
 
 ```yaml
 services:
@@ -117,14 +106,4 @@ services:
   pgvector:
     image: pgvector/pgvector:pg16
     ports: ["5432:5432"]
-
-  # LangFuse セルフホスト
-  langfuse-server:
-    image: langfuse/langfuse:latest
-    ports: ["3000:3000"]
-    depends_on: [langfuse-db]
-
-  langfuse-db:
-    image: postgres:16
-    # LangFuse 専用 DB
 ```

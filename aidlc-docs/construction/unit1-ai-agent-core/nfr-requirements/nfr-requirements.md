@@ -43,10 +43,10 @@ Unit 1: AI Agent Core（LangGraph グラフ・ツール・FitbitClient・MemoryM
 
 | ID | 要件 | 内容 |
 |---|---|---|
-| NFR-04-1 | LLM トレース | LangFuse（Docker セルフホスト）で全ノード・ツール呼び出しを記録 |
+| NFR-04-1 | LLM トレース | LangSmith（クラウド）で全ノード・ツール呼び出しを記録 |
 | NFR-04-2 | ログレベル | 開発中は `DEBUG`、ターミナル出力 |
 | NFR-04-3 | エラーログ | Python `logging` モジュール、標準エラー出力 |
-| NFR-04-4 | LangFuse ダッシュボード | `http://localhost:3000` でトレースを確認 |
+| NFR-04-4 | LangSmith ダッシュボード | `https://smith.langchain.com` でトレースを確認 |
 
 ---
 
@@ -55,7 +55,7 @@ Unit 1: AI Agent Core（LangGraph グラフ・ツール・FitbitClient・MemoryM
 | ID | 要件 | 内容 |
 |---|---|---|
 | NFR-05-1 | Fitbit トークン | `.env` ファイルに保存（Unit 1 開発時のみ、gitignore 必須） |
-| NFR-05-2 | API キー管理 | Anthropic API キー・LangFuse キーも `.env` で管理 |
+| NFR-05-2 | API キー管理 | Anthropic API キー・LangSmith API キーも `.env` で管理 |
 | NFR-05-3 | pgvector 接続情報 | `.env` で管理（ハードコード禁止） |
 
 > **注**: Security Extension は無効（PoC スコープ）。本番化時は見直しが必要。

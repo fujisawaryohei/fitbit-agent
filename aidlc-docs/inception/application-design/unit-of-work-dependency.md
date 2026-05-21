@@ -13,11 +13,11 @@
 ```
 [Unit 1: AI Agent Core]
         |
-        | 動作確認（print / LangFuse トレース）
+        | 動作確認（print / LangSmith トレース）
         v
 [Unit 2: Backend API]
         |
-        | 動作確認（curl / Postman + LangFuse）
+        | 動作確認（curl / Postman + LangSmith）
         v
 [Unit 3: Frontend]
         |
@@ -43,5 +43,5 @@
 | リソース | 用途 | ユニット |
 |---------|------|---------|
 | PostgreSQL + pgvector | Long-term memory | Unit 1 |
-| LangFuse + PostgreSQL | LLM トレース観測 | Unit 1, 2 |
+| LangSmith（クラウド） | LLM トレース観測 | Unit 1, 2 |
 | `.env` | APIキー・トークン管理 | Unit 1, 2 |

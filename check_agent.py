@@ -4,16 +4,19 @@ from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
 
 from agent.graph import agent
-from agent.langfuse_setup import get_langfuse_handler
 
 load_dotenv()
 
-config = {"configurable": {"thread_id": "test-session", "callbacks": [get_langfuse_handler()]}}
+config = {"configurable": {"thread_id": "test-session"}}
 
 try:
     result = agent.invoke(
         {
-            "messages": [HumanMessage(content="間食をやめるコツを教えて")],
+            "messages": [
+                HumanMessage(
+                    content="現在体重78kg、目標体重70kg、週0.5kgペースでカロリー赤字を計算して"
+                )
+            ],
             "session_id": "test-session",
         },
         config=config,

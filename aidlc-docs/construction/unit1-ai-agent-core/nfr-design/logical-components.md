@@ -35,8 +35,8 @@
          │
          ▼
 ┌────────────────┐    ┌───────────────┐
-│  pgvector DB   │    │  LangFuse     │
-│  (Docker)      │    │  (Docker)     │
+│  pgvector DB   │    │  LangSmith    │
+│  (Docker)      │    │  (Cloud)      │
 └────────────────┘    └───────────────┘
 ```
 
@@ -140,28 +140,20 @@ LIMIT %s;
 
 ---
 
-## LC-04: LangFuseHandler
+## LC-04: LangSmith トレース
 
-**ファイル**: `agent/langfuse_setup.py`
+**設定方法**: `.env` に以下を追加するだけで LangChain/LangGraph が自動でトレースを送信
 
 | 属性 | 内容 |
 |---|---|
-| パターン | Callback Delegation |
-| 実装 | `langfuse.callback.CallbackHandler` |
-| 設定 | `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` 環境変数 |
+| パターン | 環境変数による自動トレース |
+| 実装 | LangChain 組み込み（コード変更不要） |
+| 設定 | `LANGCHAIN_TRACING_V2`, `LANGCHAIN_API_KEY`, `LANGCHAIN_PROJECT` 環境変数 |
 
-**インターフェース**:
-```python
-def get_langfuse_handler() -> CallbackHandler
-```
-
-**LangGraph への統合方法**:
-```python
-# agent.stream() の config に渡すだけ
-config = {
-    "configurable": {"thread_id": session_id},
-    "callbacks": [get_langfuse_handler()]
-}
+```env
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=your_api_key
+LANGCHAIN_PROJECT=fitbit-agent
 ```
 
 ---
@@ -200,10 +192,10 @@ FITBIT_CLIENT_SECRET=...
 # pgvector
 PGVECTOR_DSN=postgresql://user:password@localhost:5432/fitbit_memory
 
-# LangFuse
-LANGFUSE_PUBLIC_KEY=pk-lf-...
-LANGFUSE_SECRET_KEY=sk-lf-...
-LANGFUSE_HOST=http://localhost:3000
+# LangSmith
+LANGCHAIN_TRACING_V2=true
+LANGCHAIN_API_KEY=your_api_key
+LANGCHAIN_PROJECT=fitbit-agent
 ```
 
 ---
@@ -216,7 +208,7 @@ fitbit-agent/
 │   ├── graph.py          # LangGraph グラフ定義・コンパイル
 │   ├── nodes.py          # memory_inject / agent / tool / memory_save ノード
 │   ├── state.py          # AgentState (Pydantic)
-│   └── langfuse_setup.py # LangFuse CallbackHandler
+│   └── langfuse_setup.py # 廃止（LangSmith は環境変数のみで設定）
 ├── tools/
 │   ├── fitbit_tools.py   # get_steps, get_calories_burned, get_weight 等 @tool
 │   └── planning_tools.py # calculate_calorie_deficit, generate_home_workout_plan 等 @tool
@@ -227,7 +219,7 @@ fitbit-agent/
 │   ├── embedding.py      # EmbeddingModel Singleton
 │   └── connection_pool.py# ConnectionPool Singleton
 ├── main.py               # エントリポイント（Python スクリプト実行）
-├── docker-compose.yml    # pgvector + LangFuse
+├── docker-compose.yml    # pgvector のみ
 ├── pyproject.toml
 └── .env                  # 環境変数（gitignore）
 ```
