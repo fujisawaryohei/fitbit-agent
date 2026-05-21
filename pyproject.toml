@@ -37,3 +37,10 @@ target-version = "py311"
 [tool.mypy]
 python_version = "3.11"
 strict = true
+
+[dependency-groups]
+dev = [
+    "hypothesis>=6.152.7",
+    "pytest>=9.0.3",
+    "pytest-cov>=7.1.0",
+]
