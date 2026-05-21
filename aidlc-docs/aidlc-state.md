@@ -27,12 +27,30 @@
 - [x] Units Generation - COMPLETED
 
 ### 🟢 CONSTRUCTION PHASE
-- [ ] Functional Design - EXECUTE
-- [ ] NFR Requirements - EXECUTE
-- [ ] NFR Design - EXECUTE
+
+#### Unit 1: AI Agent Core
+- [x] Functional Design - COMPLETED
+- [x] NFR Requirements - COMPLETED
+- [x] NFR Design - COMPLETED
 - [ ] Infrastructure Design - SKIPPED (ローカル実行・デプロイ後続)
-- [ ] Code Generation - SKIPPED (ユーザー自己実装)
-- [ ] Build and Test - SKIPPED (ユーザー自己実装)
+- [ ] Code Generation - ユーザー自己実装（実装済み）
+- [ ] Build and Test - ユーザー自己実装
+
+#### Unit 2: Backend API
+- [x] Functional Design - COMPLETED
+- [x] NFR Requirements - COMPLETED
+- [x] NFR Design - COMPLETED
+- [ ] Infrastructure Design - SKIPPED (ローカル実行・デプロイ後続)
+- [ ] Code Generation - ユーザー自己実装
+- [ ] Build and Test - ユーザー自己実装
+
+#### Unit 3: Frontend
+- [ ] Functional Design - PENDING
+- [ ] NFR Requirements - PENDING
+- [ ] NFR Design - PENDING
+- [ ] Infrastructure Design - SKIPPED
+- [ ] Code Generation - ユーザー自己実装
+- [ ] Build and Test - ユーザー自己実装
 
 ### 🟡 OPERATIONS PHASE
 - [ ] Operations - PLACEHOLDER
@@ -44,7 +62,7 @@
 | Property-Based Testing | Yes (Full) | Requirements Analysis |
 
 ## Current Status
-- **Lifecycle Phase**: INCEPTION
-- **Current Stage**: Functional Design（Unit 1: AI Agent Core）
-- **Next Stage**: NFR Requirements（Unit 1）
-- **Status**: In Progress
+- **Lifecycle Phase**: CONSTRUCTION
+- **Current Stage**: Unit 2: Backend API — 設計完了
+- **Next Stage**: Unit 3: Frontend — 設計（必要に応じて）
+- **Status**: Unit 2 設計完了
