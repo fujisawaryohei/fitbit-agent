@@ -15,12 +15,21 @@ def save_memory(session_id: str, content: str) -> None:
                 """
                 INSERT INTO memories (session_id, content, embedding)
                 VALUES (%s, %s, %s::vector)
-                ON CONFLICT (session_id)
-                DO UPDATE SET content = EXCLUDED.content,
-                              embedding = EXCLUDED.embedding,
-                              updated_at = now()
                 """,
                 (session_id, content, embedding),
+            )
+            cur.execute(
+                """
+                DELETE FROM memories
+                WHERE session_id = %s
+                AND id NOT IN (
+                    SELECT id FROM memories
+                    WHERE session_id = %s
+                    ORDER BY created_at DESC
+                    LIMIT 50
+                )
+                """,
+                (session_id, session_id),
             )
         conn.commit()
     except Exception:

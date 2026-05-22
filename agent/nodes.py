@@ -1,4 +1,3 @@
-
 import textwrap
 
 from dotenv import load_dotenv

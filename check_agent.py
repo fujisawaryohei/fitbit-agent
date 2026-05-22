@@ -1,4 +1,5 @@
 import sys
+import uuid
 
 from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage
@@ -7,17 +8,18 @@ from agent.graph import agent
 
 load_dotenv()
 
-config = {"configurable": {"thread_id": "test-session"}}
+session_id = str(uuid.uuid4())
+config = {"configurable": {"thread_id": session_id}}
 
 try:
     result = agent.invoke(
         {
             "messages": [
                 HumanMessage(
-                    content="現在体重78kg、目標体重70kg、週0.5kgペースでカロリー赤字を計算して"
+                    content="現在体重70kgです。体重を3ヶ月で5kg落とすためには、4月の消費カロリーの平均から考えると、1日辺りどれくらいの摂取カロリーを消費する必要がありますか？"
                 )
             ],
-            "session_id": "test-session",
+            "session_id": session_id,
         },
         config=config,
     )

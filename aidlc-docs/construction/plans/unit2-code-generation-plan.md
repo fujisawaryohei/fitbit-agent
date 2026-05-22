@@ -26,12 +26,12 @@
 
 ### Step 2: ディレクトリ作成
 
-- [ ] `api/` ディレクトリ + `__init__.py`
-- [ ] `models/` ディレクトリ + `__init__.py`
+- [x] `api/` ディレクトリ + `__init__.py`
+- [x] `models/` ディレクトリ + `__init__.py`
 
 ### Step 3: HealthResponse モデルの追加
 
-- [ ] `models/api_models.py` を新規作成
+- [ ] `models/health.py` を新規作成
 - [ ] `HealthResponse` のみ追加（`status: Literal["ok"]`, `version: str = "1.0.0"`）
 
 ### Step 4: health エンドポイントの実装
@@ -59,10 +59,9 @@
 
 ### Step 6: ChatRequest / SSEChunk モデルの追加
 
-- [ ] `models/api_models.py` に `ChatRequest` を追記
-  - `message`（空禁止・2000文字以内）、`session_id`（空禁止）の `field_validator`
-- [ ] `models/api_models.py` に `SSEChunk` を追記
-  - `type: Literal["chunk", "done", "error"]`, `content: str = ""`, `session_id: str = ""`
+- [ ] `models/chat.py` を新規作成
+- [ ] `ChatRequest` を追加（`message`（空禁止・2000文字以内）、`session_id`（空禁止）の `field_validator`）
+- [ ] `SSEChunk` を追加（`type: Literal["chunk", "done", "error"]`, `content: str = ""`, `session_id: str = ""`）
 
 ### Step 7: agent に astream 対応の取得口を追加
 
@@ -113,14 +112,15 @@
 
 ### Step 10: OAuth2 モデルの追加
 
-- [ ] `models/api_models.py` に `OAuthState` を追記
+- [ ] `models/auth.py` を新規作成
+- [ ] `OAuthState` を追加
   - `value: str`, `created_at: datetime`
   - `generate()` クラスメソッド（`secrets.token_urlsafe(32)` で生成）
   - `is_expired(ttl_seconds=600) -> bool` メソッド
-- [ ] `models/api_models.py` に `TokenResponse` を追記
+- [ ] `TokenResponse` を追加
   - `access_token`, `refresh_token`, `expires_in`, `token_type`, `scope`, `user_id`
   - `expires_at() -> datetime` メソッド
-- [ ] `models/api_models.py` に `AuthCallbackResponse` を追記
+- [ ] `AuthCallbackResponse` を追加
   - `message: str = "Fitbit認証が完了しました"`, `fitbit_user_id: str`, `scope: str`
 
 ### Step 11: FitbitClient に OAuth2 メソッドを追記
