@@ -60,13 +60,13 @@
 
 ### Step 6: ChatRequest / SSEChunk モデルの追加
 
-- [ ] `models/chat.py` を新規作成
-- [ ] `ChatRequest` を追加（`message`（空禁止・2000文字以内）、`session_id`（空禁止）の `field_validator`）
-- [ ] `SSEChunk` を追加（`type: Literal["chunk", "done", "error"]`, `content: str = ""`, `session_id: str = ""`）
+- [x] `models/chat.py` を新規作成
+- [x] `ChatRequest` を追加（`message`（空禁止・2000文字以内）、`session_id`（空禁止）の `field_validator`）
+- [x] `SSEChunk` を追加（`type: Literal["chunk", "done", "error"]`, `content: str = ""`, `session_id: str = ""`）
 
 ### Step 7: agent に astream 対応の取得口を追加
 
-- [ ] `agent/graph.py` の末尾に `get_agent()` 関数を1行追記
+- [x] `agent/graph.py` の末尾に `get_agent()` 関数を1行追記
   ```python
   def get_agent():
       return agent
@@ -74,7 +74,7 @@
 
 ### Step 8: chat エンドポイントの実装
 
-- [ ] `api/chat.py` を作成
+- [x] `api/chat.py` を作成
   - モジュールレベルで `_agent = get_agent()`
   - `POST /chat → StreamingResponse(media_type="text/event-stream")`
     - ヘッダー: `Cache-Control: no-cache`, `X-Accel-Buffering: no`
@@ -86,11 +86,11 @@
 
 ### Step 9: app.py に chat_router を追加
 
-- [ ] `app.py` に `chat_router` をインポートして `app.include_router(chat_router)` を1行追記
+- [x] `api/router.py` に `chat_router` を追加
 
 ### Milestone 2 動作確認
 
-- [ ] SSE ストリーミングを確認:
+- [x] SSE ストリーミングを確認:
   ```bash
   curl -N -X POST http://localhost:8000/chat \
     -H "Content-Type: application/json" \

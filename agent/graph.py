@@ -18,11 +18,19 @@ _builder.add_node("memory_save_node", memory_save_node)
 
 _builder.add_edge(START, "memory_inject_node")
 _builder.add_edge("memory_inject_node", "agent_node")
-_builder.add_conditional_edges("agent_node", should_continue, {
-    "tool_node": "tool_node",
-    END: "memory_save_node",
-})
+_builder.add_conditional_edges(
+    "agent_node",
+    should_continue,
+    {
+        "tool_node": "tool_node",
+        END: "memory_save_node",
+    },
+)
 _builder.add_edge("tool_node", "agent_node")
 _builder.add_edge("memory_save_node", END)
 
 agent = _builder.compile(checkpointer=MemorySaver())
+
+
+def get_agent():
+    return agent
