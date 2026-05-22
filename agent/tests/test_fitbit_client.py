@@ -3,7 +3,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from fitbit.client import FitbitClient
+from agent.fitbit.client import FitbitClient
 
 
 @pytest.fixture

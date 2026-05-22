@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.router import router
+from app.api.router import router
 
-app = FastAPI(title="Ftibit Agent API", version="1.0")
+app = FastAPI(title="Fitbit Agent API", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,

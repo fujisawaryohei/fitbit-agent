@@ -1,7 +1,7 @@
 import logging
 
-from memory.connection_pool import get_connection, release_connection
-from memory.embedding import embed
+from agent.memory.connection_pool import get_connection, release_connection
+from agent.memory.embedding import embed
 
 logger = logging.getLogger(__name__)
 

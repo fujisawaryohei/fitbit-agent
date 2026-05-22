@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from tools.models import CalorieDeficitResult, WeightGoal
+from agent.tools.models import CalorieDeficitResult, WeightGoal
 
 
 class TestWeightGoal:

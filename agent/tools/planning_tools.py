@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 from langchain_anthropic import ChatAnthropic
 from langchain_core.tools import tool
 
-from tools.models import CalorieDeficitResult
+from agent.tools.models import CalorieDeficitResult
 
 load_dotenv()
 

@@ -1,6 +1,6 @@
 import pytest
 
-from tools.planning_tools import calculate_calorie_deficit
+from agent.tools.planning_tools import calculate_calorie_deficit
 
 KCAL_PER_KG = 7200
 

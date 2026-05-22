@@ -2,7 +2,7 @@ from unittest.mock import patch
 
 import pytest
 
-from tools.fitbit_tools import (
+from agent.tools.fitbit_tools import (
     get_calories_burned,
     get_calories_in,
     get_heart_rate,
@@ -10,7 +10,7 @@ from tools.fitbit_tools import (
     get_weight,
 )
 
-MODULE = "tools.fitbit_tools._client"
+MODULE = "agent.tools.fitbit_tools._client"
 
 
 class TestGetSteps:

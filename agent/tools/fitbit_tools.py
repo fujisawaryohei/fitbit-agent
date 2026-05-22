@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 from langchain_core.tools import tool
 
-from fitbit.client import FitbitClient
+from agent.fitbit.client import FitbitClient
 
 load_dotenv()
 

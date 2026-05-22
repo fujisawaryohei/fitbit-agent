@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from tools.planning_tools import generate_home_workout_plan, get_weekly_progress
+from agent.tools.planning_tools import generate_home_workout_plan, get_weekly_progress
 
 
 def make_llm_mock(content: str) -> MagicMock:

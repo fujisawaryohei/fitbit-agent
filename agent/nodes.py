@@ -7,15 +7,15 @@ from langgraph.graph import END
 from langgraph.prebuilt import ToolNode
 
 from agent.state import AgentState
-from memory.manager import save_memory, search_memories
-from tools.fitbit_tools import (
+from agent.memory.manager import save_memory, search_memories
+from agent.tools.fitbit_tools import (
     get_calories_burned,
     get_calories_in,
     get_heart_rate,
     get_steps,
     get_weight,
 )
-from tools.planning_tools import (
+from agent.tools.planning_tools import (
     calculate_calorie_deficit,
     generate_home_workout_plan,
     get_weekly_progress,
