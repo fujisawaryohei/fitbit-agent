@@ -31,25 +31,26 @@
 
 ### Step 3: HealthResponse モデルの追加
 
-- [ ] `models/health.py` を新規作成
-- [ ] `HealthResponse` のみ追加（`status: Literal["ok"]`, `version: str = "1.0.0"`）
+- [x] `models/health.py` を新規作成
+- [x] `HealthResponse` のみ追加（`status: Literal["ok"]`, `version: str = "1.0.0"`）
 
 ### Step 4: health エンドポイントの実装
 
-- [ ] `api/health.py` を作成
-- [ ] `GET /health → HealthResponse(status="ok")` を実装
+- [x] `api/health.py` を作成
+- [x] `GET /health → HealthResponse(status="ok")` を実装
 
 ### Step 5: FastAPI アプリの起動設定
 
-- [ ] `app.py` を作成（`main.py` は Unit 1 の REPL と干渉しないよう別ファイルにする）
+- [x] `api/router.py` を作成（全ルーターの集約ポイント）
+- [x] `app.py` を作成（`main.py` は Unit 1 の REPL と干渉しないよう別ファイルにする）
   - `FastAPI` インスタンス生成 + `CORSMiddleware`（`localhost:3000` のみ）
-  - `health_router` のみ登録
+  - `api/router.py` 経由で `health_router` を登録
 
 ### Milestone 1 動作確認
 
-- [ ] `uv run uvicorn app:app --reload --port 8000` でサーバー起動
-- [ ] `curl http://localhost:8000/health` → `{"status":"ok","version":"1.0.0"}` を確認
-- [ ] `http://localhost:8000/docs` で Swagger UI が開くことを確認
+- [x] `uv run uvicorn app:app --reload --port 8000` でサーバー起動
+- [x] `curl http://localhost:8000/health` → `{"status":"ok","version":"1.0.0"}` を確認
+- [x] `http://localhost:8000/docs` で Swagger UI が開くことを確認
 
 ---
 

@@ -3,6 +3,9 @@ name = "fitbit-agent"
 version = "0.1.0"
 requires-python = ">=3.11"
 dependencies = [
+    # HTTP Handler
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.34.0",
     # AI / LangGraph
     "langgraph>=0.2.0",
     "langchain-core>=0.3.0",
