@@ -25,17 +25,27 @@ HTTP Client (curl / Frontend)
                                         │
                                         ▼
                               ┌──────────────────────┐
-                              │  FitbitClient         │
-                              │  (fitbit/client.py)   │
-                              │  [Unit 1 既存メソッド] │
-                              │  + OAuth2 メソッド追記 │
+                              │  UserRepository       │
+                              │  (repositories/       │
+                              │   user_repository.py) │
+                              │  SELECT / INSERT /    │
+                              │  UPDATE / DELETE      │
                               └──────────┬───────────┘
                                          │
-                                         ▼
-                              ┌──────────────────────┐
-                              │  Fitbit OAuth2 API   │
-                              │  (External)           │
-                              └──────────────────────┘
+                              ┌──────────┴───────────┐
+                              │                       │
+                              ▼                       ▼
+                    ┌──────────────────┐  ┌──────────────────────┐
+                    │  FitbitClient    │  │  PostgreSQL (pgvector)│
+                    │  (fitbit/client) │  │  users テーブル        │
+                    │  OAuth2 メソッド │  └──────────────────────┘
+                    └────────┬─────────┘
+                             │
+                             ▼
+                    ┌──────────────────────┐
+                    │  Fitbit OAuth2 API   │
+                    │  (External)           │
+                    └──────────────────────┘
 ```
 
 ---
@@ -136,29 +146,74 @@ GET /health → HealthResponse (200)
 
 ---
 
-## LC-05: FitbitService
+## LC-05: UserRepository
 
-**ファイル**: `services/fitbit_service.py`
+**ファイル**: `app/repositories/user_repository.py`
 
 | 属性 | 内容 |
 |---|---|
-| 役割 | OAuth2 フロー全体の管理（state ストア・トークン交換） |
-| 依存 | `FitbitClient`、`OAuthState` |
+| 役割 | `users` テーブルの CRUD 操作を隠蔽する Repository レイヤ |
+| 依存 | `psycopg2` 接続（`agent/memory/connection_pool.py` の `get_connection()` を再利用） |
+
+**インターフェース**:
+```python
+from datetime import datetime
+from app.models.user import User
+
+class UserRepository:
+    def __init__(self, conn) -> None:
+        self._conn = conn
+
+    def find_by_fitbit_user_id(self, fitbit_user_id: str) -> User | None:
+        """fitbit_user_id でユーザーを検索。存在しなければ None を返す。"""
+
+    def upsert(self, user: User) -> None:
+        """INSERT ... ON CONFLICT (fitbit_user_id) DO UPDATE でトークンを保存・更新する。"""
+
+    def update_tokens(self, fitbit_user_id: str, access_token: str, refresh_token: str, token_expires_at: datetime) -> None:
+        """トークンリフレッシュ時に access_token / refresh_token / token_expires_at を更新する。"""
+
+    def delete(self, fitbit_user_id: str) -> None:
+        """ユーザーレコードを削除する。"""
+```
+
+**upsert SQL**:
+```sql
+INSERT INTO users (fitbit_user_id, access_token, refresh_token, token_expires_at, scope, updated_at)
+VALUES (%s, %s, %s, %s, %s, NOW())
+ON CONFLICT (fitbit_user_id) DO UPDATE SET
+    access_token     = EXCLUDED.access_token,
+    refresh_token    = EXCLUDED.refresh_token,
+    token_expires_at = EXCLUDED.token_expires_at,
+    scope            = EXCLUDED.scope,
+    updated_at       = NOW();
+```
+
+---
+
+## LC-07: FitbitService
+
+**ファイル**: `app/services/fitbit_service.py`
+
+| 属性 | 内容 |
+|---|---|
+| 役割 | OAuth2 フロー全体の管理（state ストア・トークン交換・DB 保存） |
+| 依存 | `FitbitClient`、`UserRepository`、`CsrfState` |
 
 **インターフェース**:
 ```python
 class FitbitService:
-    def __init__(self, fitbit_client: FitbitClient) -> None
+    def __init__(self, fitbit_client: FitbitClient, user_repository: UserRepository) -> None
 
     def get_authorization_url(self) -> tuple[str, str]:
         """(authorization_url, state_value) を返す。state_store に保存する。"""
 
     def exchange_code_for_token(self, code: str, state: str) -> TokenResponse:
-        """state 検証 → トークン交換 → TokenResponse を返す。
+        """state 検証 → トークン交換 → UserRepository.upsert() で DB 保存 → TokenResponse を返す。
         失敗時: InvalidStateError / StateExpiredError / TokenExchangeError を raise"""
 
     # 内部状態
-    _state_store: dict[str, OAuthState]  # {state_value: OAuthState}
+    _state_store: dict[str, CsrfState]  # {state_value: CsrfState}
 ```
 
 **カスタム例外**:
@@ -220,6 +275,46 @@ class FitbitClient:
         self._access_token = access_token
         self._refresh_token = refresh_token
         self._redirect_uri = redirect_uri
+```
+
+---
+
+## LC-08: DB 接続設定（ConnectionPool）
+
+**ファイル**: `app/config/connection_pool.py`（`agent/memory/connection_pool.py` から移動）
+
+| 属性 | 内容 |
+|---|---|
+| 役割 | psycopg2 コネクションプールの初期化・接続払い出し |
+| 依存 | `psycopg2`、`PGVECTOR_DSN` 環境変数 |
+
+**移動に伴う影響**:
+- `agent/memory/manager.py` の import を `app.config.connection_pool` に更新する
+- `app/repositories/user_repository.py` は `app.config.connection_pool` から `get_connection()` を使う
+
+---
+
+## LC-09: マイグレーション管理（Alembic）
+
+**ディレクトリ**: `app/migrations/`
+
+| 属性 | 内容 |
+|---|---|
+| 役割 | DB スキーマのバージョン管理 |
+| ツール | Alembic |
+
+**管理対象テーブル**:
+- `memories`（Unit 1 既存 / pgvector 利用）
+- `users`（Unit 2 新規追加）
+
+**ディレクトリ構成**:
+```
+app/migrations/
+├── env.py
+├── script.py.mako
+├── alembic.ini       ← プロジェクトルートに配置
+└── versions/
+    └── 0001_initial.py   ← memories + users テーブル
 ```
 
 ---

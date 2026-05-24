@@ -111,6 +111,21 @@
 
 **追加するもの**: OAuth2 に必要なモデル・サービス・ルーターのみ
 
+### Step 9b: connection_pool の移動と Alembic セットアップ
+
+- [ ] `app/config/` ディレクトリ + `__init__.py` を作成
+- [ ] `agent/memory/connection_pool.py` を `app/config/connection_pool.py` にコピー
+- [ ] `agent/memory/connection_pool.py` の内容を `app.config.connection_pool` への re-export に差し替え（後方互換）
+- [ ] `agent/memory/manager.py` の import を `app.config.connection_pool` に更新
+- [ ] `pyproject.toml` の依存に `alembic>=1.14.0` を追加し `uv sync`
+- [ ] `uv run alembic init app/migrations` を実行
+- [ ] `alembic.ini` の `script_location` を `app/migrations` に設定
+- [ ] `app/migrations/env.py` の `sqlalchemy.url` を `PGVECTOR_DSN` 環境変数から取得するよう設定
+- [ ] 初回マイグレーションファイル `versions/0001_initial.py` を作成
+  - `memories` テーブル（`id`, `session_id`, `content`, `embedding vector(1536)`, `created_at`）
+  - `users` テーブル（domain-entities.md の DDL 参照）
+- [ ] `uv run alembic upgrade head` でマイグレーション適用・確認
+
 ### Step 10: OAuth2 モデルの追加
 
 - [ ] `models/auth.py` を新規作成
@@ -139,14 +154,30 @@
   - `POST https://api.fitbit.com/oauth2/token`（`grant_type=refresh_token`）
   - 失敗時は `TokenRefreshError` を raise
 
-### Step 12: FitbitService の実装
+### Step 12: User モデルの追加
 
-- [ ] `services/` ディレクトリ + `__init__.py`
-- [ ] `services/fitbit_service.py` を作成
+- [ ] `app/models/user.py` を新規作成
+  - `User` dataclass（`fitbit_user_id`, `access_token`, `refresh_token`, `token_expires_at`, `scope`, `id`, `created_at`, `updated_at`）
+
+### Step 12b: UserRepository の実装
+
+- [ ] `app/repositories/` ディレクトリ + `__init__.py`
+- [ ] `app/repositories/user_repository.py` を作成
+  - `UserRepository.__init__(conn)`: psycopg2 接続を受け取る
+  - `find_by_fitbit_user_id(fitbit_user_id: str) -> User | None`
+  - `upsert(user: User) -> None`（INSERT ... ON CONFLICT DO UPDATE）
+  - `update_tokens(fitbit_user_id, access_token, refresh_token, token_expires_at) -> None`
+  - `delete(fitbit_user_id: str) -> None`
+  - `get_user_repository()` ファクトリ関数（`get_connection()` を使用）
+
+### Step 12c: FitbitService の実装
+
+- [ ] `app/services/` ディレクトリ + `__init__.py`
+- [ ] `app/services/fitbit_service.py` を作成
   - カスタム例外: `InvalidStateError`, `StateExpiredError`, `TokenExchangeError`
-  - `FitbitService.__init__`: `_state_store: dict[str, OAuthState] = {}` を保持
+  - `FitbitService.__init__(fitbit_client, user_repository)`: `_state_store: dict[str, CsrfState] = {}` を保持
   - `get_authorization_url() -> tuple[str, str]`（URL と state 値を返す）
-  - `exchange_code_for_token(code, state) -> TokenResponse`（state 検証 → 削除 → トークン交換）
+  - `exchange_code_for_token(code, state) -> TokenResponse`（state 検証 → トークン交換 → `user_repository.upsert()` で DB 保存）
   - `get_fitbit_service()` Singleton ファクトリ関数
 
 ### Step 13: auth エンドポイントの実装

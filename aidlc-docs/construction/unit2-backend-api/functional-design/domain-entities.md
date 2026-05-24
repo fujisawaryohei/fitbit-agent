@@ -2,15 +2,16 @@
 
 ## エンティティ一覧
 
-| エンティティ | 説明 | 関連ストーリー |
-|---|---|---|
-| ChatRequest | POST /chat のリクエストボディ | US-09〜15 |
-| ChatResponse | POST /chat の非SSE時レスポンス（エラー用） | US-09〜15 |
-| SSEChunk | SSEストリーミングのチャンク単位 | US-09〜15 |
-| OAuthState | OAuth2 CSRF防止用 state トークン | US-01〜03 |
-| TokenResponse | Fitbit API から受け取るトークンレスポンス | US-01〜03 |
-| AuthCallbackResponse | /auth/fitbit/callback の成功レスポンス | US-01〜03 |
-| HealthResponse | GET /health のレスポンス | — |
+| エンティティ　　　　 | 説明　　　　　　　　　　　　　　　　　　　　　| 関連ストーリー |
+| ----------------------| -----------------------------------------------| ----------------|
+| ChatRequest　　　　　| POST /chat のリクエストボディ　　　　　　　　 | US-09〜15　　　|
+| ChatResponse　　　　 | POST /chat の非SSE時レスポンス（エラー用）　　| US-09〜15　　　|
+| SSEChunk　　　　　　 | SSEストリーミングのチャンク単位　　　　　　　 | US-09〜15　　　|
+| OAuthState　　　　　 | OAuth2 CSRF防止用 state トークン　　　　　　　| US-01〜03　　　|
+| TokenResponse　　　　| Fitbit API から受け取るトークンレスポンス　　 | US-01〜03　　　|
+| AuthCallbackResponse | /auth/fitbit/callback の成功レスポンス　　　　| US-01〜03　　　|
+| User　　　　　　　　 | Fitbit ユーザーとそのトークン情報（DB永続化） | US-01〜03　　　|
+| HealthResponse　　　 | GET /health のレスポンス　　　　　　　　　　　| —　　　　　　　|
 
 ---
 
@@ -137,6 +138,47 @@ class AuthCallbackResponse(BaseModel):
     fitbit_user_id: str
     scope: str
 ```
+
+---
+
+## User
+
+Fitbit ユーザーの認証情報を保持するドメインエンティティ。PostgreSQL の `users` テーブルに永続化する。
+
+```python
+from dataclasses import dataclass, field
+from datetime import datetime
+
+@dataclass
+class User:
+    fitbit_user_id: str
+    access_token: str
+    refresh_token: str
+    token_expires_at: datetime
+    scope: str
+    id: int | None = None
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+```
+
+**DB スキーマ**:
+```sql
+CREATE TABLE IF NOT EXISTS users (
+    id               SERIAL PRIMARY KEY,
+    fitbit_user_id   VARCHAR(255) UNIQUE NOT NULL,
+    access_token     TEXT NOT NULL,
+    refresh_token    TEXT NOT NULL,
+    token_expires_at TIMESTAMPTZ NOT NULL,
+    scope            TEXT NOT NULL,
+    created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+```
+
+**設計方針**:
+- `fitbit_user_id` で一意に識別する（Fitbit API が返す `user_id`）
+- トークンは `UserRepository.upsert()` で INSERT / UPDATE を一本化する
+- 複数ユーザー対応: `fitbit_user_id` を毎回 `FitbitClient` に渡してトークンを引く
 
 ---
 

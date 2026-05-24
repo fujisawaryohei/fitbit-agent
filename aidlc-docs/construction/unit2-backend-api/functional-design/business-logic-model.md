@@ -121,8 +121,10 @@ GET /auth/fitbit/callback?code=xxx&state=yyy
   │           redirect_uri=http://localhost:8000/auth/fitbit/callback
   │         → TokenResponse
   │
-  ├─ [4] TokenResponse を .env / 環境変数に書き込み
-  │         （PoC: FitbitClient の内部状態を更新して以降のリクエストで使用）
+  ├─ [4] UserRepository.upsert(user) でトークンを DB に保存
+  │         INSERT または UPDATE（fitbit_user_id が既存なら上書き）
+  │         保存内容: fitbit_user_id, access_token, refresh_token,
+  │                   token_expires_at (now + expires_in 秒), scope
   │
   └─ [5] AuthCallbackResponse を返す（HTTP 200 JSON）
 ```

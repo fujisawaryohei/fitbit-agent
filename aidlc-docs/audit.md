@@ -193,3 +193,26 @@
 **Context**: CONSTRUCTION - Code Generation Unit 1 Plan 再編成（小さく動かしながら進めるアプローチに変更）
 
 ---
+
+## Unit 2 設計変更 - トークン保存先を DB に変更
+**Timestamp**: 2026-05-24T00:00:00Z
+**User Input**: ".envにtoken置いてしまうと、複数ユーザーアクセス時にディスクのデッドロックが発生するリスクがあります。素直にDBにしましょう。Userテーブルを作るイメージです。Userテーブルの操作は、INSERT、SELECT、UPDATE、DELETEの4種類で行います。Postgresqlへの接続は現在使っているpycopg2を利用します。またDBは現在、セマンティックサーチで利用しているpgvectorのDBを利用します。Userテーブルの操作は、Repositoriesレイヤを作りそこに定義します。AI-DLCの更新もお願いします。"
+**AI Response**: 以下のドキュメントを更新:
+- domain-entities.md: User エンティティ追加（DB スキーマ含む）
+- business-logic-model.md: BLM-03 の [4] を .env 書き込み → UserRepository.upsert() に変更
+- logical-components.md: UserRepository（LC-05）新規追加、FitbitService（LC-07）が UserRepository を受け取る形に更新、構成図更新
+- unit2-code-generation-plan.md: Step 12 を 12/12b/12c に分割
+**Context**: CONSTRUCTION - Unit 2 設計変更（トークン永続化）
+
+---
+
+## Unit 2 設計変更 - connection_pool 移動・Alembic 導入
+**Timestamp**: 2026-05-24T00:05:00Z
+**User Input**: "userテーブルのDDLと、agent/memoryにあるinit.sqlをapp/migrationsに移動して、alembicでマイグレーション管理してほしい。memory/connection_pool.py は、app/config配下に置くようにして"
+**AI Response**: 以下のドキュメントを更新:
+- logical-components.md: LC-08（ConnectionPool を app/config/ に移動）・LC-09（Alembic マイグレーション管理）を追加
+- unit2-code-generation-plan.md: Step 9b を新規追加（connection_pool 移動 + Alembic セットアップ + 初回マイグレーション作成）
+管理対象テーブル: memories（既存）+ users（新規）
+**Context**: CONSTRUCTION - Unit 2 設計変更（DB 基盤整備）
+
+---
