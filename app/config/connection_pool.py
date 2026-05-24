@@ -20,3 +20,4 @@ def get_connection() -> connection:
 
 def release_connection(conn: connection) -> None:
     get_pool().putconn(conn)
+

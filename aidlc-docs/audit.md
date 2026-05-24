@@ -216,3 +216,15 @@
 **Context**: CONSTRUCTION - Unit 2 設計変更（DB 基盤整備）
 
 ---
+
+## Unit 2 設計変更 - アーキテクチャ層の整理
+**Timestamp**: 2026-05-24T12:00:00Z
+**User Input**: "chat.py, health.pyはDTO, user.pyはドメインエンティティだと思うので、DTOは、schemasディレクトリを作成してそこへ移動して。" / "これもDTOに移動して" / "auth.pyもpydanticを剥がして、ピュアなPythonで書き直して" / "@app/api/chat.py @app/api/health.py はcontrollersディレクトリを作成してそこに移動させて"
+**AI Response**: DDD に基づきレイヤーを整理:
+- `app/controllers/` 新設: chat.py・health.py を app/api/ から移動
+- `app/schemas/` 新設: DTO（ChatRequest, SSEChunk, HealthResponse, TokenResponse, AuthCallbackResponse）を移動
+- `app/models/` をドメインモデル専用に整理: CsrfState（純粋 Python クラス）・User（ドメインエンティティ）のみ
+- logical-components.md のコンポーネント定義・構成図・ディレクトリ構成を実態に合わせて更新
+**Context**: CONSTRUCTION - Unit 2 アーキテクチャ整理（DDD レイヤー分離）
+
+---

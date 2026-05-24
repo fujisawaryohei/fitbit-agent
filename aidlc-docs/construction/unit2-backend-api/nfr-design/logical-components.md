@@ -7,12 +7,12 @@ HTTP Client (curl / Frontend)
         │
         ▼
 ┌────────────────────────────────────────────────────────────┐
-│                     FastAPIApp (main.py)                    │
+│                     FastAPIApp (server.py)                  │
 │  ┌──────────────────────────────────────────────────────┐  │
 │  │  CORSMiddleware                                        │  │
-│  │  /chat   ──→  ChatRouter (api/chat.py)               │  │
-│  │  /auth/* ──→  AuthRouter (api/auth.py)               │  │
-│  │  /health ──→  HealthRouter (api/health.py)           │  │
+│  │  /chat   ──→  ChatController    (controllers/chat.py) │  │
+│  │  /auth/* ──→  AuthController    (controllers/auth.py) │  │
+│  │  /health ──→  HealthController  (controllers/health.py│  │
 │  └──────────────────────────────────────────────────────┘  │
 └────────────────────────────────────────────────────────────┘
          │                          │
@@ -52,92 +52,57 @@ HTTP Client (curl / Frontend)
 
 ## LC-01: FastAPIApp
 
-**ファイル**: `main.py`
+**ファイル**: `server.py`
 
 | 属性 | 内容 |
 |---|---|
 | 役割 | FastAPI アプリ初期化・ミドルウェア設定・ルーター登録 |
-| 起動コマンド | `uv run uvicorn main:app --reload --port 8000` |
-
-**実装**:
-```python
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from api.chat import router as chat_router
-from api.auth import router as auth_router
-from api.health import router as health_router
-
-app = FastAPI(title="Fitbit Agent API", version="1.0.0")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(chat_router)
-app.include_router(auth_router, prefix="/auth")
-app.include_router(health_router)
-```
+| 起動コマンド | `uv run uvicorn server:app --reload --port 8000` |
 
 ---
 
-## LC-02: ChatRouter
+## LC-02: ChatController
 
-**ファイル**: `api/chat.py`
+**ファイル**: `app/controllers/chat.py`
 
 | 属性 | 内容 |
 |---|---|
 | 役割 | POST /chat エンドポイント・SSE ジェネレータ |
-| 依存 | `LangGraphAgent`（`agent/graph.py` からインポート） |
+| 依存 | `LangGraphAgent`（`agent/graph.py`）、`ChatRequest` / `SSEChunk`（`app/schemas/chat.py`） |
 
 **インターフェース**:
 ```python
-# エンドポイント
 POST /chat → StreamingResponse (text/event-stream)
-
-# SSE ジェネレータ（内部）
 async def _sse_generator(message: str, session_id: str) -> AsyncIterator[str]
-```
-
-**LangGraphAgent の参照方法**:
-```python
-# api/chat.py
-from agent.graph import get_agent  # Singleton パターンで取得
-
-agent = get_agent()  # モジュールレベルで1回のみ初期化
 ```
 
 ---
 
-## LC-03: AuthRouter
+## LC-03: AuthController
 
-**ファイル**: `api/auth.py`
+**ファイル**: `app/controllers/auth.py`
 
 | 属性 | 内容 |
 |---|---|
 | 役割 | OAuth2 認可開始・コールバック処理エンドポイント |
-| 依存 | `FitbitService`（`services/fitbit_service.py` からインポート） |
+| 依存 | `FitbitService`（`app/services/fitbit_service.py`）、`AuthCallbackResponse`（`app/schemas/auth.py`） |
 
 **インターフェース**:
 ```python
-# エンドポイント
 GET /auth/fitbit          → RedirectResponse (302)
 GET /auth/fitbit/callback → AuthCallbackResponse (200) | HTTPException (400)
 ```
 
 ---
 
-## LC-04: HealthRouter
+## LC-04: HealthController
 
-**ファイル**: `api/health.py`
+**ファイル**: `app/controllers/health.py`
 
 | 属性 | 内容 |
 |---|---|
 | 役割 | GET /health エンドポイント |
-| 依存 | なし |
+| 依存 | `HealthResponse`（`app/schemas/health.py`） |
 
 **インターフェース**:
 ```python
@@ -153,7 +118,7 @@ GET /health → HealthResponse (200)
 | 属性 | 内容 |
 |---|---|
 | 役割 | `users` テーブルの CRUD 操作を隠蔽する Repository レイヤ |
-| 依存 | `psycopg2` 接続（`agent/memory/connection_pool.py` の `get_connection()` を再利用） |
+| 依存 | `psycopg2` 接続（`app/config/connection_pool.py` の `get_connection()` を使用） |
 
 **インターフェース**:
 ```python
@@ -338,33 +303,46 @@ FITBIT_REDIRECT_URI=http://localhost:8000/auth/fitbit/callback
 
 ```
 fitbit-agent/
-├── main.py                        # FastAPI アプリ初期化（新規）
-├── api/
-│   ├── __init__.py
-│   ├── chat.py                    # POST /chat（新規）
-│   ├── auth.py                    # GET /auth/fitbit*（新規）
-│   └── health.py                  # GET /health（新規）
-├── services/
-│   ├── __init__.py
-│   └── fitbit_service.py          # FitbitService（新規）
-├── models/
-│   ├── __init__.py
-│   └── api_models.py              # ChatRequest, SSEChunk, AuthCallbackResponse 等（新規）
-├── fitbit/
-│   └── client.py                  # OAuth2 メソッドを追記（既存ファイル更新）
+├── server.py                          # FastAPI アプリ起動エントリポイント
+├── alembic.ini                        # Alembic 設定
 │
-│ --- Unit 1 の既存ファイル（変更なし）---
-├── agent/
+├── app/                               # バックエンド API（Unit 2）
+│   ├── api/
+│   │   └── router.py                  # ルーター集約
+│   ├── controllers/                   # エンドポイント定義
+│   │   ├── chat.py                    # POST /chat
+│   │   ├── auth.py                    # GET /auth/fitbit*（新規）
+│   │   └── health.py                  # GET /health
+│   ├── services/
+│   │   └── fitbit_service.py          # FitbitService（新規）
+│   ├── repositories/
+│   │   └── user_repository.py         # UserRepository（新規）
+│   ├── models/                        # ドメインモデル（ロジックあり）
+│   │   ├── auth.py                    # CsrfState
+│   │   └── user.py                    # User
+│   ├── schemas/                       # DTO（入出力の型定義）
+│   │   ├── auth.py                    # TokenResponse, AuthCallbackResponse
+│   │   ├── chat.py                    # ChatRequest, SSEChunk
+│   │   └── health.py                  # HealthResponse
+│   ├── config/
+│   │   └── connection_pool.py         # psycopg2 接続プール
+│   └── migrations/                    # Alembic マイグレーション
+│       └── versions/
+│           └── 1ca42141c7ae_initial.py
+│
+├── agent/                             # LangGraph エージェント（Unit 1）
+│   ├── fitbit/
+│   │   └── client.py                  # Fitbit API クライアント
+│   ├── memory/
+│   │   ├── manager.py
+│   │   └── embedding.py
+│   ├── tools/
+│   │   ├── fitbit_tools.py
+│   │   └── planning_tools.py
 │   ├── graph.py
 │   ├── nodes.py
 │   └── state.py
-├── tools/
-│   ├── fitbit_tools.py
-│   └── planning_tools.py
-├── memory/
-│   ├── manager.py
-│   ├── embedding.py
-│   └── connection_pool.py
+│
 ├── docker-compose.yml
 ├── pyproject.toml
 └── .env

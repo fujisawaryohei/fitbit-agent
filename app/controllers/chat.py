@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from langchain_core.messages import HumanMessage
 
 from agent.graph import get_agent
-from app.models.chat import ChatRequest, SSEChunk
+from app.schemas.chat import ChatRequest, SSEChunk
 
 router = APIRouter()
 _agent = get_agent()
