@@ -16,7 +16,7 @@ class FitbitService:
         authorization_url = self._client.get_authorization_url(state.value)
         return authorization_url, state.value
 
-    def exchange_code_for_token(self, code) -> None:
+    def exchange_code_for_token(self, code) -> User:
         token_response = self._client.exchange_code_for_token(code)
         user = User(
             fitbit_user_id=token_response.user_id,
@@ -26,6 +26,7 @@ class FitbitService:
             scope=token_response.scope,
         )
         self._user_repository.upsert(user)
+        return user
 
     def update_token(self) -> None:
         token_response = self._client.refresh_access_token()
