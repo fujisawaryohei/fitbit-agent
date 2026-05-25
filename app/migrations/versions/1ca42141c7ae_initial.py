@@ -33,13 +33,14 @@ def upgrade() -> None:
 
     op.execute("""
         CREATE TABLE IF NOT EXISTS users(
-            id              SERIAL PRIMARY KEY,
-            fitbit_user_id  VARCHAR(255) UNIQUE NOT NULL,
-            access_token    TEXT        NOT NULL,
-            refresh_token   TEXT        NOT NULL,        
-            scope           TEXT        NOT NULL,
-            created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-            updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            id               SERIAL PRIMARY KEY,
+            fitbit_user_id   VARCHAR(255) UNIQUE NOT NULL,
+            access_token     TEXT        NOT NULL,
+            refresh_token    TEXT        NOT NULL,
+            token_expires_at TIMESTAMPTZ NOT NULL,
+            scope            TEXT        NOT NULL,
+            created_at       TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+            updated_at       TIMESTAMPTZ NOT NULL DEFAULT NOW()
         )
     """)
     pass

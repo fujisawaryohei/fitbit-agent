@@ -21,7 +21,11 @@ def _get_service() -> FitbitService:
     if _fitbit_service is None:
         conn = get_connection()
         fitbit_client = FitbitClient(
-            client_id=os.getenv("FITBIT_CLIENT_ID"), client_secret=os.getenv("FITBIT_CLIENT_SECRET")
+            client_id=os.getenv("FITBIT_CLIENT_ID"),
+            client_secret=os.getenv("FITBIT_CLIENT_SECRET"),
+            redirect_uri=os.getenv(
+                "FITBIT_REDIRECT_URI", "http://localhost:8000/auth/fitbit/callback"
+            ),
         )
         user_repository = UserRepository(conn)
         _fitbit_service = FitbitService(fitbit_client, user_repository)
