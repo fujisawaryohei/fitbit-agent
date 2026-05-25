@@ -1,53 +1,71 @@
-import os
 import re
-from datetime import datetime, timedelta, timezone
+import urllib.parse
+from datetime import datetime
 from typing import Any
 
 import httpx
-from dotenv import load_dotenv
 
-load_dotenv()
+from app.schemas.auth import TokenResponse
 
 BASE_URL = "https://api.fitbit.com/1/user/-"
+AUTH_URL = "https://www.fitbit.com/oauth2/authorize"
+TOKEN_URL = "https://api.fitbit.com/oauth2/token"
 
 
 class FitbitClient:
-    def _get_valid_token(self) -> str:
-        access_token = os.getenv("FITBIT_ACCESS_TOKEN", "")
-        expires_at_str = os.getenv("FITBIT_EXPIRES_AT", "")
+    def __init__(
+        self,
+        client_id: str,
+        client_secret: str,
+        access_token: str | None = None,
+        refresh_token: str | None = None,
+        redirect_uri: str = "http://localhost:8000/auth/fitbit/callback",
+    ) -> None:
+        self._client_id = client_id
+        self._client_secret = client_secret
+        self._access_token = access_token
+        self._refresh_token = refresh_token
+        self._redirect_uri = redirect_uri
 
-        if expires_at_str:
-            expires_at = datetime.fromisoformat(expires_at_str)
-            if expires_at <= datetime.now(timezone.utc) + timedelta(minutes=5):
-                return self._refresh_token()
+    def get_authorization_url(self, state: str) -> str:
+        params = urllib.parse.urlencode(
+            {
+                "client_id": self._client_id,
+                "response_type": "code",
+                "scope": "activity heartrate weight nutrition",
+                "redirect_uri": self._redirect_uri,
+                "state": state,
+            }
+        )
+        return f"{AUTH_URL}?{params}"
 
-        if not access_token:
-            raise RuntimeError("FITBIT_ACCESS_TOKEN が設定されていません。")
-        return access_token
-
-    def _refresh_token(self) -> str:
-        refresh_token = os.getenv("FITBIT_REFRESH_TOKEN", "")
-        client_id = os.getenv("FITBIT_CLIENT_ID", "")
-        client_secret = os.getenv("FITBIT_CLIENT_SECRET", "")
-
+    def exchange_code_for_token(self, code: str) -> TokenResponse:
         response = httpx.post(
-            "https://api.fitbit.com/oauth2/token",
-            auth=(client_id, client_secret),
-            data={"grant_type": "refresh_token", "refresh_token": refresh_token},
+            url=TOKEN_URL,
+            auth=(self._client_id, self._client_secret),
+            data={
+                "grant_type": "authorization_code",
+                "code": code,
+                "redirect_uri": self._redirect_uri,
+            },
         )
         if response.status_code != 200:
-            raise RuntimeError(f"トークンリフレッシュに失敗しました。({response.status_code})")
+            raise RuntimeError("トークンの交換に失敗しました")
+        return TokenResponse(**response.json())
 
-        tokens = response.json()
-        os.environ["FITBIT_ACCESS_TOKEN"] = tokens.get("access_token", "")
-        if "refresh_token" in tokens:
-            os.environ["FITBIT_REFRESH_TOKEN"] = tokens["refresh_token"]
+    def refresh_access_token(self) -> TokenResponse:
+        response = httpx.post(
+            url=TOKEN_URL,
+            auth=(self._client_id, self._client_secret),
+            data={"grant_type": "refresh_token", "refresh_token": self._refresh_token},
+        )
+        if response.status_code != 200:
+            raise RuntimeError("トークンのリフレッシュに失敗しました")
+        return TokenResponse(**response.json())
 
-        return str(tokens.get("access_token", ""))
-
-    def _get(self, endpoint: str, date: str | None = None, period: str | None = None) -> dict[str, Any]:
-        token = self._get_valid_token()
-
+    def _get(
+        self, endpoint: str, date: str | None = None, period: str | None = None
+    ) -> dict[str, Any]:
         if date:
             if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date):
                 raise ValueError(
@@ -62,7 +80,7 @@ class FitbitClient:
         else:
             url = f"{BASE_URL}/{endpoint}/{resolved_date}.json"
 
-        response = httpx.get(url, headers={"Authorization": f"Bearer {token}"})
+        response = httpx.get(url, headers={"Authorization": f"Bearer {self._access_token}"})
 
         if response.status_code == 200:
             result: dict[str, Any] = response.json()
@@ -70,11 +88,15 @@ class FitbitClient:
         elif response.status_code == 401:
             raise RuntimeError("アクセストークンが無効です。再認証が必要です。(401)")
         elif response.status_code == 429:
-            raise RuntimeError("APIリクエスト上限に達しました。しばらく待ってから再試行してください。(429)")
+            raise RuntimeError(
+                "APIリクエスト上限に達しました。しばらく待ってから再試行してください。(429)"
+            )
         elif response.status_code == 404:
             raise RuntimeError("指定期間のデータが見つかりません。(404)")
         else:
-            raise RuntimeError(f"APIリクエストに失敗しました。({response.status_code}): {response.text}")
+            raise RuntimeError(
+                f"APIリクエストに失敗しました。({response.status_code}): {response.text}"
+            )
 
     def get_activities(self, date: str | None = None) -> dict[str, Any]:
         return self._get("activities/date", date)

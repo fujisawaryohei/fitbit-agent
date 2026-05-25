@@ -1,3 +1,5 @@
+import os
+
 from dotenv import load_dotenv
 from langchain_core.tools import tool
 
@@ -5,7 +7,12 @@ from agent.fitbit.client import FitbitClient
 
 load_dotenv()
 
-_client = FitbitClient()
+_client = FitbitClient(
+    client_id=os.getenv("FITBIT_CLIENT_ID", ""),
+    client_secret=os.getenv("FITBIT_CLIENT_SECRET", ""),
+    access_token=os.getenv("FITBIT_ACCESS_TOKEN"),
+    refresh_token=os.getenv("FITBIT_REFRESH_TOKEN"),
+)
 
 
 @tool
