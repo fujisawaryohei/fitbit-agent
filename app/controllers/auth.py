@@ -8,7 +8,7 @@ from agent.fitbit.client import FitbitClient
 from app.config.connection_pool import get_connection
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import AuthCallbackResponse
-from app.services.fitbit_service import FitbitService
+from app.services.fitbit_service import FitbitService, InvalidStateError, StateExpiredError
 
 router = APIRouter()
 
@@ -45,8 +45,12 @@ def authorization_url():
 @router.get("/auth/fitbit/callback")
 def callback(code: str | None = None, state: str | None = None):
     fitbit_service = _get_service()
-    if state in fitbit_service._state_store:
-        user = fitbit_service.exchange_code_for_token(code)
+    try:
+        user = fitbit_service.exchange_code_for_token(code, state)
         return AuthCallbackResponse(fitbit_user_id=user.fitbit_user_id, scope=user.scope)
-    else:
+    except InvalidStateError:
         raise HTTPException(status_code=400, detail="不正なリクエストです")
+    except StateExpiredError:
+        raise HTTPException(
+            status_code=400, detail="認証がタイムアウトしました。再度お試しください。"
+        )

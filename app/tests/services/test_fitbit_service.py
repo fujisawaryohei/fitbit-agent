@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.services.fitbit_service import FitbitService
+from app.services.fitbit_service import FitbitService, InvalidStateError
 
 
 @pytest.fixture
@@ -52,20 +52,41 @@ class TestGetAuthorizationUrl:
 
 
 class TestExchangeCodeForToken:
+    def _setup_state(self, service, mock_client):
+        """state_store に有効な state を1件登録してその値を返す"""
+        mock_client.get_authorization_url.return_value = "https://example.com/auth"
+        _, state = service.get_authorization_url()
+        return state
+
     def test_calls_client_exchange(self, mock_client, mock_repo, service):
+        state = self._setup_state(service, mock_client)
         mock_client.exchange_code_for_token.return_value = make_token_response(mock_client)
-        service.exchange_code_for_token("auth-code-123")
+        service.exchange_code_for_token("auth-code-123", state)
         mock_client.exchange_code_for_token.assert_called_once_with("auth-code-123")
 
     def test_upserts_user_to_repository(self, mock_client, mock_repo, service):
+        state = self._setup_state(service, mock_client)
         mock_client.exchange_code_for_token.return_value = make_token_response(mock_client)
-        service.exchange_code_for_token("auth-code-123")
+        service.exchange_code_for_token("auth-code-123", state)
         mock_repo.upsert.assert_called_once()
         user = mock_repo.upsert.call_args[0][0]
         assert user.fitbit_user_id == "fitbit-user-123"
         assert user.access_token == "access-abc"
         assert user.refresh_token == "refresh-xyz"
         assert user.scope == "activity heartrate"
+
+    def test_raises_invalid_state_error_for_unknown_state(self, mock_client, mock_repo, service):
+        with pytest.raises(InvalidStateError):
+            service.exchange_code_for_token("auth-code-123", "unknown-state")
+
+    def test_removes_state_after_exchange(self, mock_client, mock_repo, service):
+        """リプレイ攻撃防止: 同じ state を2回使えないこと"""
+
+        state = self._setup_state(service, mock_client)
+        mock_client.exchange_code_for_token.return_value = make_token_response(mock_client)
+        service.exchange_code_for_token("auth-code-123", state)
+        with pytest.raises(InvalidStateError):
+            service.exchange_code_for_token("auth-code-123", state)
 
 
 class TestUpdateToken:

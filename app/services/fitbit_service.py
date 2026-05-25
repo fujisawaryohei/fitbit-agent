@@ -4,6 +4,14 @@ from app.models.user import User
 from app.repositories.user_repository import UserRepository
 
 
+class InvalidStateError(Exception):
+    pass
+
+
+class StateExpiredError(Exception):
+    pass
+
+
 class FitbitService:
     def __init__(self, fitbit_client: FitbitClient, user_repository: UserRepository) -> None:
         self._client = fitbit_client
@@ -16,7 +24,17 @@ class FitbitService:
         authorization_url = self._client.get_authorization_url(state.value)
         return authorization_url, state.value
 
-    def exchange_code_for_token(self, code) -> User:
+    def exchange_code_for_token(self, code: str | None, state: str | None) -> User:
+        if state not in self._state_store:
+            raise InvalidStateError("不正な値です")
+
+        csrf_state = self._state_store[state]
+        if csrf_state.is_expired():
+            del self._state_store[state]
+            raise StateExpiredError("stateの有効期限が切れています")
+
+        del self._state_store[state]
+
         token_response = self._client.exchange_code_for_token(code)
         user = User(
             fitbit_user_id=token_response.user_id,
