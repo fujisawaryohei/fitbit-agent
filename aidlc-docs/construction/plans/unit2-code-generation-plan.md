@@ -113,14 +113,14 @@
 
 ### Step 9b: connection_pool の移動と Alembic セットアップ
 
-- [x] `app/config/` ディレクトリ + `__init__.py` を作成
-- [x] `agent/memory/connection_pool.py` を `app/config/connection_pool.py` にコピー
-- [x] `agent/memory/connection_pool.py` の内容を `app.config.connection_pool` への re-export に差し替え（後方互換）
-- [x] `agent/memory/manager.py` の import を `app.config.connection_pool` に更新
+- [x] `backend/config/` ディレクトリ + `__init__.py` を作成
+- [x] `agent/memory/connection_pool.py` を `backend/config/connection_pool.py` にコピー
+- [x] `agent/memory/connection_pool.py` の内容を `backend.config.connection_pool` への re-export に差し替え（後方互換）
+- [x] `agent/memory/manager.py` の import を `backend.config.connection_pool` に更新
 - [x] `pyproject.toml` の依存に `alembic>=1.14.0` を追加し `uv sync`
-- [x] `uv run alembic init app/migrations` を実行
-- [x] `alembic.ini` の `script_location` を `app/migrations` に設定
-- [x] `app/migrations/env.py` の `sqlalchemy.url` を `PGVECTOR_DSN` 環境変数から取得するよう設定
+- [x] `uv run alembic init backend/migrations` を実行
+- [x] `alembic.ini` の `script_location` を `backend/migrations` に設定
+- [x] `backend/migrations/env.py` の `sqlalchemy.url` を `PGVECTOR_DSN` 環境変数から取得するよう設定
 - [x] 初回マイグレーションファイル `versions/0001_initial.py` を作成
   - `memories` テーブル（`id`, `session_id`, `content`, `embedding vector(1536)`, `created_at`）
   - `users` テーブル（domain-entities.md の DDL 参照）
@@ -156,13 +156,13 @@
 
 ### Step 12: User モデルの追加
 
-- [x] `app/models/user.py` を新規作成
+- [x] `backend/models/user.py` を新規作成
   - `User` dataclass（`fitbit_user_id`, `access_token`, `refresh_token`, `token_expires_at`, `scope`, `id`, `created_at`, `updated_at`）
 
 ### Step 12b: UserRepository の実装
 
-- [x] `app/repositories/` ディレクトリ + `__init__.py`
-- [x] `app/repositories/user_repository.py` を作成
+- [x] `backend/repositories/` ディレクトリ + `__init__.py`
+- [x] `backend/repositories/user_repository.py` を作成
   - `UserRepository.__init__(conn)`: psycopg2 接続を受け取る
   - `find_by_fitbit_user_id(fitbit_user_id: str) -> User | None`
   - `upsert(user: User) -> None`（INSERT ... ON CONFLICT DO UPDATE）
@@ -172,8 +172,8 @@
 
 ### Step 12c: FitbitService の実装
 
-- [x] `app/services/` ディレクトリ + `__init__.py`
-- [x] `app/services/fitbit_service.py` を作成
+- [x] `backend/services/` ディレクトリ + `__init__.py`
+- [x] `backend/services/fitbit_service.py` を作成
   - カスタム例外: `InvalidStateError`, `StateExpiredError`, `TokenExchangeError`
   - `FitbitService.__init__(fitbit_client, user_repository)`: `_state_store: dict[str, CsrfState] = {}` を保持
   - `get_authorization_url() -> tuple[str, str]`（URL と state 値を返す）

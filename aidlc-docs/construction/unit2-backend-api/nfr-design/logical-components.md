@@ -63,7 +63,7 @@ HTTP Client (curl / Frontend)
 
 ## LC-02: ChatController
 
-**ファイル**: `app/controllers/chat.py`
+**ファイル**: `backend/controllers/chat.py`
 
 | 属性 | 内容 |
 |---|---|
@@ -88,12 +88,12 @@ async def _sse_generator(message: str, session_id: str) -> AsyncIterator[str]
 
 ## LC-03: AuthController
 
-**ファイル**: `app/controllers/auth.py`
+**ファイル**: `backend/controllers/auth.py`
 
 | 属性 | 内容 |
 |---|---|
 | 役割 | OAuth2 認可開始・コールバック処理・Cookie 発行 |
-| 依存 | `FitbitService`（`app/services/fitbit_service.py`）、`AuthCallbackResponse`（`app/schemas/auth.py`） |
+| 依存 | `FitbitService`（`backend/services/fitbit_service.py`）、`AuthCallbackResponse`（`backend/schemas/auth.py`） |
 
 **インターフェース**:
 ```python
@@ -113,12 +113,12 @@ GET /auth/fitbit/callback → AuthCallbackResponse (200)
 
 ## LC-04: HealthController
 
-**ファイル**: `app/controllers/health.py`
+**ファイル**: `backend/controllers/health.py`
 
 | 属性 | 内容 |
 |---|---|
 | 役割 | GET /health エンドポイント |
-| 依存 | `HealthResponse`（`app/schemas/health.py`） |
+| 依存 | `HealthResponse`（`backend/schemas/health.py`） |
 
 **インターフェース**:
 ```python
@@ -129,17 +129,17 @@ GET /health → HealthResponse (200)
 
 ## LC-05: UserRepository
 
-**ファイル**: `app/repositories/user_repository.py`
+**ファイル**: `backend/repositories/user_repository.py`
 
 | 属性 | 内容 |
 |---|---|
 | 役割 | `users` テーブルの CRUD 操作を隠蔽する Repository レイヤ |
-| 依存 | `psycopg2` 接続（`app/config/connection_pool.py` の `get_connection()` を使用） |
+| 依存 | `psycopg2` 接続（`backend/config/connection_pool.py` の `get_connection()` を使用） |
 
 **インターフェース**:
 ```python
 from datetime import datetime
-from app.models.user import User
+from backend.models.user import User
 
 class UserRepository:
     def __init__(self, conn) -> None:
@@ -174,7 +174,7 @@ ON CONFLICT (fitbit_user_id) DO UPDATE SET
 
 ## LC-07: FitbitService
 
-**ファイル**: `app/services/fitbit_service.py`
+**ファイル**: `backend/services/fitbit_service.py`
 
 | 属性 | 内容 |
 |---|---|
@@ -262,7 +262,7 @@ class FitbitClient:
 
 ## LC-08: DB 接続設定（ConnectionPool）
 
-**ファイル**: `app/config/connection_pool.py`（`agent/memory/connection_pool.py` から移動）
+**ファイル**: `backend/config/connection_pool.py`（`agent/memory/connection_pool.py` から移動）
 
 | 属性 | 内容 |
 |---|---|
@@ -270,14 +270,14 @@ class FitbitClient:
 | 依存 | `psycopg2`、`PGVECTOR_DSN` 環境変数 |
 
 **移動に伴う影響**:
-- `agent/memory/manager.py` の import を `app.config.connection_pool` に更新する
-- `app/repositories/user_repository.py` は `app.config.connection_pool` から `get_connection()` を使う
+- `agent/memory/manager.py` の import を `backend.config.connection_pool` に更新する
+- `backend/repositories/user_repository.py` は `backend.config.connection_pool` から `get_connection()` を使う
 
 ---
 
 ## LC-09: マイグレーション管理（Alembic）
 
-**ディレクトリ**: `app/migrations/`
+**ディレクトリ**: `backend/migrations/`
 
 | 属性 | 内容 |
 |---|---|
@@ -290,7 +290,7 @@ class FitbitClient:
 
 **ディレクトリ構成**:
 ```
-app/migrations/
+backend/migrations/
 ├── env.py
 ├── script.py.mako
 ├── alembic.ini       ← プロジェクトルートに配置
@@ -345,7 +345,7 @@ fitbit-agent/
 ├── server.py                          # FastAPI アプリ起動エントリポイント
 ├── alembic.ini                        # Alembic 設定
 │
-├── app/                               # バックエンド API（Unit 2）
+├── backend/                            # バックエンド API（Unit 2）
 │   ├── api/
 │   │   └── router.py                  # ルーター集約
 │   ├── controllers/                   # エンドポイント定義
