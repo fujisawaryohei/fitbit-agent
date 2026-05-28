@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="ja" className={`${geist.className} h-full`} suppressHydrationWarning>
       <body className="h-full flex flex-col bg-gray-50 text-gray-900 antialiased">
-        <header className="flex items-center justify-between px-5 py-3 bg-[#00B0B9] text-white shrink-0 shadow-sm">
+        <header className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 bg-[#00B0B9] text-white shrink-0 shadow-sm">
           <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <svg
               width="20"
