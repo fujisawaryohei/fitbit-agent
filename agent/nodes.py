@@ -23,6 +23,16 @@ from agent.tools.planning_tools import (
 
 load_dotenv()
 
+
+def _extract_text(content: object) -> str:
+    if isinstance(content, list):
+        return "".join(
+            block.get("text", "") for block in content
+            if isinstance(block, dict) and block.get("type") == "text"
+        )
+    return str(content)
+
+
 _tools = [
     get_steps,
     get_calories_burned,
@@ -91,7 +101,7 @@ def memory_inject_node(state: AgentState) -> dict[str, list[AnyMessage]]:
 def memory_save_node(state: AgentState) -> dict[str, list[AnyMessage]]:
     _summary_llm = ChatBedrockConverse(model="jp.anthropic.claude-haiku-4-5-20251001-v1:0", region_name="ap-northeast-1")
     conversation = "\n".join(
-        f"{'User' if isinstance(m, HumanMessage) else 'Assistant'}: {m.content}"
+        f"{'User' if isinstance(m, HumanMessage) else 'Assistant'}: {_extract_text(m.content)}"
         for m in state.messages
         if isinstance(m, (HumanMessage, AIMessage))
     )
@@ -102,6 +112,7 @@ def memory_save_node(state: AgentState) -> dict[str, list[AnyMessage]]:
         {conversation}
     """).strip()
     summary = _summary_llm.invoke(summary_prompt)
-    if str(summary.content).strip() != "SKIP":
-        save_memory(state.session_id, str(summary.content))
+    content = _extract_text(summary.content)
+    if content.strip() != "SKIP":
+        save_memory(state.session_id, content)
     return {"messages": []}

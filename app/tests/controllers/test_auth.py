@@ -37,20 +37,17 @@ class TestAuthorizationUrl:
 
 
 class TestCallback:
-    def test_returns_callback_response(self):
+    def test_redirects_to_frontend(self):
         mock_service = _make_mock_service()
         mock_service.exchange_code_for_token.return_value = _make_mock_user()
         with patch("app.controllers.auth._get_service", return_value=mock_service):
-            client = TestClient(_app)
+            client = TestClient(_app, follow_redirects=False)
             response = client.get(
                 "/auth/fitbit/callback", params={"code": "auth-code", "state": "test-state"}
             )
-        assert response.status_code == 200
-        body = response.json()
-        assert body["fitbit_user_id"] == "ABC123"
-        assert body["scope"] == "activity heartrate"
-        assert body["message"] == "Fitbit認証が完了しました"
+        assert response.status_code == 302
         assert response.cookies.get("fitbit_user_id") == "ABC123"
+        assert response.cookies.get("fitbit_connected") == "true"
 
     def test_invalid_state_returns_400(self):
         mock_service = _make_mock_service()

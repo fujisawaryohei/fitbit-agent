@@ -38,30 +38,31 @@ def chat(
             status_code=401, detail="アクセストークンの有効期限が切れています。再認証してください。"
         )
 
-    set_fitbit_client(
-        FitbitClient(
-            client_id=os.getenv("FITBIT_CLIENT_ID", ""),
-            client_secret=os.getenv("FITBIT_CLIENT_SECRET", ""),
-            access_token=user.access_token,
-            refresh_token=user.refresh_token,
-        )
+    fitbit_client = FitbitClient(
+        client_id=os.getenv("FITBIT_CLIENT_ID", ""),
+        client_secret=os.getenv("FITBIT_CLIENT_SECRET", ""),
+        access_token=user.access_token,
+        refresh_token=user.refresh_token,
     )
 
     return StreamingResponse(
-        _sse_generator(message=request.message, session_id=request.session_id),
+        _sse_generator(message=request.message, session_id=request.session_id, fitbit_client=fitbit_client),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
-async def _sse_generator(message: str, session_id: str):
+async def _sse_generator(message: str, session_id: str, fitbit_client: FitbitClient):
+    set_fitbit_client(fitbit_client)  # asyncio コンテキストでセットするためここで呼ぶ
     config = {"configurable": {"thread_id": session_id}}
     try:
-        async for msg, _ in _agent.astream(
+        async for msg, metadata in _agent.astream(
             {"messages": [HumanMessage(content=message)], "session_id": session_id},
             config=config,
             stream_mode="messages",
         ):
+            if metadata.get("langgraph_node") != "agent_node":
+                continue
             content = msg.content
             if isinstance(content, list):
                 content = "".join(

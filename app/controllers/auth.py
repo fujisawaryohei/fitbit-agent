@@ -1,14 +1,15 @@
 import os
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 from fastapi.responses import RedirectResponse
 
 from agent.fitbit.client import FitbitClient
 from app.config.connection_pool import get_connection
 from app.repositories.user_repository import UserRepository
-from app.schemas.auth import AuthCallbackResponse
 from app.services.fitbit_service import FitbitService, InvalidStateError, StateExpiredError
+
+_FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 router = APIRouter()
 
@@ -43,12 +44,14 @@ def authorization_url():
 
 
 @router.get("/auth/fitbit/callback")
-def callback(response: Response, code: str | None = None, state: str | None = None):
+def callback(code: str | None = None, state: str | None = None):
     fitbit_service = _get_service()
     try:
         user = fitbit_service.exchange_code_for_token(code, state)
-        response.set_cookie(key="fitbit_user_id", value=user.fitbit_user_id, httponly=True, samesite="lax")
-        return AuthCallbackResponse(fitbit_user_id=user.fitbit_user_id, scope=user.scope)
+        redirect = RedirectResponse(url=_FRONTEND_URL, status_code=302)
+        redirect.set_cookie(key="fitbit_user_id", value=user.fitbit_user_id, httponly=True, samesite="lax")
+        redirect.set_cookie(key="fitbit_connected", value="true", httponly=False, samesite="lax")
+        return redirect
     except InvalidStateError:
         raise HTTPException(status_code=400, detail="不正なリクエストです")
     except StateExpiredError:
