@@ -9,7 +9,6 @@ import type { Message } from "@/types/chat";
 export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [streaming, setStreaming] = useState(false);
-  const sessionId = useRef(crypto.randomUUID());
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -34,7 +33,6 @@ export default function Chat() {
     try {
       await streamChat(
         text,
-        sessionId.current,
         (chunk) => {
           setMessages((prev) => {
             const updated = [...prev];

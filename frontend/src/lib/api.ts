@@ -4,7 +4,6 @@ export const BACKEND_URL = "/api";
 
 export async function streamChat(
   message: string,
-  sessionId: string,
   onChunk: (chunk: SSEChunk) => void,
   onDone: () => void,
   onError: (error: string) => void
@@ -15,7 +14,7 @@ export async function streamChat(
     response = await fetch(`${BACKEND_URL}/chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message, session_id: sessionId }),
+      body: JSON.stringify({ message }),
       credentials: "include",
     });
   } catch {
