@@ -44,25 +44,26 @@
 
 ## LC-01: EmbeddingModel（Singleton）
 
-**ファイル**: `memory/embedding.py`
+**ファイル**: `agent/memory/embedding.py`
 
 | 属性 | 内容 |
 |---|---|
-| パターン | Singleton |
-| 初期化 | アプリ起動時（モジュールインポート時） |
-| モデル | `intfloat/multilingual-e5-large` |
+| パターン | Singleton（遅延初期化） |
+| モデル | `amazon.titan-embed-text-v2:0`（Amazon Bedrock） |
 | 出力次元 | 1024 |
-| 依存 | `sentence-transformers` ライブラリ |
+| リージョン | `ap-northeast-1` |
+| 依存 | `langchain-aws.BedrockEmbeddings` |
+
+> **変更履歴**: `sentence-transformers` + `intfloat/multilingual-e5-large` のローカル実行から Bedrock マネージドモデルに変更。
 
 **インターフェース**:
 ```python
-def get_embedding_model() -> SentenceTransformer
-def embed(text: str) -> list[float]  # 1024次元 normalized vector
+def embed(text: str) -> list[float]  # 1024次元 vector
 ```
 
 **ライフサイクル**:
-- 起動時: `get_embedding_model()` でモデルをロード（初回のみ560MBダウンロード）
-- 以降: キャッシュされたインスタンスを返す（< 1ms）
+- 初回呼び出し時: `BedrockEmbeddings` インスタンスを生成してキャッシュ
+- 以降: キャッシュされたインスタンスを再利用
 
 ---
 
@@ -180,19 +181,18 @@ graph = workflow.compile(checkpointer=checkpointer)
 ## 環境変数一覧（.env）
 
 ```env
-# Anthropic
-ANTHROPIC_API_KEY=sk-ant-...
+# AWS 認証（EC2 インスタンスプロファイルで自動取得のため通常は不要）
+# AWS_ACCESS_KEY_ID=...
+# AWS_SECRET_ACCESS_KEY=...
 
-# Fitbit（Unit 1 開発時は手動設定）
-FITBIT_ACCESS_TOKEN=...
-FITBIT_REFRESH_TOKEN=...
+# Fitbit（Client ID/Secret のみ。アクセストークンは Unit 2 OAuth2 フロー後に DB から取得）
 FITBIT_CLIENT_ID=...
 FITBIT_CLIENT_SECRET=...
 
 # pgvector
 PGVECTOR_DSN=postgresql://user:password@localhost:5432/fitbit_memory
 
-# LangSmith
+# LangSmith（任意。LANGCHAIN_TRACING_V2=false で無効化可能）
 LANGCHAIN_TRACING_V2=true
 LANGCHAIN_API_KEY=your_api_key
 LANGCHAIN_PROJECT=fitbit-agent

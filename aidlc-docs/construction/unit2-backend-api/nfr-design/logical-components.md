@@ -67,12 +67,20 @@ HTTP Client (curl / Frontend)
 
 | 属性 | 内容 |
 |---|---|
-| 役割 | POST /chat エンドポイント・SSE ジェネレータ |
-| 依存 | `LangGraphAgent`（`agent/graph.py`）、`ChatRequest` / `SSEChunk`（`app/schemas/chat.py`） |
+| 役割 | POST /chat エンドポイント・Cookie 認証・SSE ジェネレータ |
+| 依存 | `LangGraphAgent`（`agent/graph.py`）、`UserRepository`、`FitbitClient`、`AgentContext`、`ChatRequest` / `SSEChunk` |
+
+**認証フロー**:
+1. Cookie `fitbit_user_id` を取得（なければ 401）
+2. `UserRepository.find_by_fitbit_user_id()` で DB 検索（なければ 401）
+3. `User.is_token_expired()` でトークン有効期限確認（期限切れなら 401）
+4. `FitbitClient` を生成し `set_fitbit_client()` で async コンテキストにセット
+5. SSE ストリーミング開始
 
 **インターフェース**:
 ```python
-POST /chat → StreamingResponse (text/event-stream)
+POST /chat  Cookie: fitbit_user_id=<id>  → StreamingResponse (text/event-stream)
+            認証失敗時 → HTTPException (401)
 async def _sse_generator(message: str, session_id: str) -> AsyncIterator[str]
 ```
 
@@ -84,14 +92,22 @@ async def _sse_generator(message: str, session_id: str) -> AsyncIterator[str]
 
 | 属性 | 内容 |
 |---|---|
-| 役割 | OAuth2 認可開始・コールバック処理エンドポイント |
+| 役割 | OAuth2 認可開始・コールバック処理・Cookie 発行 |
 | 依存 | `FitbitService`（`app/services/fitbit_service.py`）、`AuthCallbackResponse`（`app/schemas/auth.py`） |
 
 **インターフェース**:
 ```python
 GET /auth/fitbit          → RedirectResponse (302)
-GET /auth/fitbit/callback → AuthCallbackResponse (200) | HTTPException (400)
+GET /auth/fitbit/callback → AuthCallbackResponse (200)
+                             + Set-Cookie: fitbit_user_id=<id>; HttpOnly; SameSite=Lax
+                           | HTTPException (400)
 ```
+
+**Cookie 仕様**:
+- キー: `fitbit_user_id`
+- HttpOnly: `True`（JavaScript からアクセス不可）
+- SameSite: `lax`
+- Secure: `False`（開発環境。本番は `True` + HTTPS 必須）
 
 ---
 
@@ -284,6 +300,29 @@ app/migrations/
 
 ---
 
+## LC-10: AgentContext（FitbitClient の per-request 受け渡し）
+
+**ファイル**: `agent/context.py`
+
+| 属性 | 内容 |
+|---|---|
+| 役割 | リクエストごとに独立した `FitbitClient` インスタンスを asyncio コンテキストで保持 |
+| 実装 | Python 標準ライブラリ `contextvars.ContextVar` |
+| 依存 | `agent.fitbit.client.FitbitClient` |
+
+**背景**:
+- `fitbit_tools.py` のツールはモジュールレベルで登録されており、リクエストごとに異なるトークンを渡す手段が必要
+- `ContextVar` は asyncio タスクごとに独立した値を保持するため、並行リクエストでユーザーが混在しない
+- sync 関数（`chat()`）から `set_fitbit_client()` を呼ぶと asyncio コンテキストに届かないため、async ジェネレーター（`_sse_generator`）の先頭で呼び出す
+
+**インターフェース**:
+```python
+def set_fitbit_client(client: FitbitClient) -> None
+def get_fitbit_client() -> FitbitClient  # 未設定時は RuntimeError
+```
+
+---
+
 ## 環境変数追加（.env）
 
 Unit 1 の `.env` に以下を追記する:
@@ -331,16 +370,17 @@ fitbit-agent/
 │           └── 1ca42141c7ae_initial.py
 │
 ├── agent/                             # LangGraph エージェント（Unit 1）
+│   ├── context.py                     # ContextVar: per-request FitbitClient 受け渡し（Unit 2 追加）
 │   ├── fitbit/
 │   │   └── client.py                  # Fitbit API クライアント
 │   ├── memory/
 │   │   ├── manager.py
-│   │   └── embedding.py
+│   │   └── embedding.py               # BedrockEmbeddings (Titan v2)
 │   ├── tools/
-│   │   ├── fitbit_tools.py
+│   │   ├── fitbit_tools.py            # get_fitbit_client() 経由でトークン取得
 │   │   └── planning_tools.py
 │   ├── graph.py
-│   ├── nodes.py
+│   ├── nodes.py                       # ChatBedrockConverse (jp prefix, ap-northeast-1)
 │   └── state.py
 │
 ├── docker-compose.yml

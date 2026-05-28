@@ -15,8 +15,10 @@
 |---|---|---|
 | LangGraph | 0.2.x | カスタム ReAct グラフの手動実装に最適 |
 | LangChain Core | 0.3.x | LangGraph の依存ライブラリ |
-| langchain-anthropic | latest | Claude API へのアクセス |
-| LLM モデル | `claude-sonnet-4-6` | 最新 Claude モデル、高いコーディング能力 |
+| langchain-aws | 0.2.x | Amazon Bedrock 経由での Claude / Titan アクセス |
+| LLM モデル | `jp.anthropic.claude-haiku-4-5-20251001-v1:0` | Bedrock クロスリージョン推論（ap-northeast-1） |
+
+> **変更履歴**: 当初 `langchain-anthropic` + Anthropic API 直接呼び出しだったが、EC2 インスタンスプロファイルによる認証統一のため Amazon Bedrock 経由に変更。
 
 ---
 
@@ -24,19 +26,24 @@
 
 | 技術 | 値 | 選定理由 |
 |---|---|---|
-| モデル名 | `intfloat/multilingual-e5-large` | ローカル実行・無料・日本語対応・高品質 |
-| ライブラリ | `sentence-transformers` | Hugging Face モデルのローカル実行 |
-| ベクトル次元数 | **1024** | multilingual-e5-large の出力次元 |
-| 実行環境 | ローカル CPU（PoC）| GPU 不要、モデルは初回起動時に自動ダウンロード |
+| モデル名 | `amazon.titan-embed-text-v2:0` | Bedrock マネージド・日本語対応・1024次元 |
+| ライブラリ | `langchain-aws.BedrockEmbeddings` | langchain-aws 経由で Bedrock API を利用 |
+| ベクトル次元数 | **1024** | Titan v2 のデフォルト出力次元（DB スキーマと一致） |
+| リージョン | `ap-northeast-1` | EC2 と同一リージョン |
 
 ```python
 # 使用イメージ
-from sentence_transformers import SentenceTransformer
+from langchain_aws import BedrockEmbeddings
 
-model = SentenceTransformer("intfloat/multilingual-e5-large")
-embedding = model.encode("テキスト", normalize_embeddings=True).tolist()
+embeddings = BedrockEmbeddings(
+    model_id="amazon.titan-embed-text-v2:0",
+    region_name="ap-northeast-1",
+)
+vector = embeddings.embed_query("テキスト")
 # → 1024次元の float list
 ```
+
+> **変更履歴**: 当初 `sentence-transformers` + `intfloat/multilingual-e5-large` のローカル実行だったが、Bedrock 統一方針により Amazon Titan v2 に変更。
 
 ---
 
@@ -113,11 +120,7 @@ dependencies = [
     # AI / LangGraph
     "langgraph>=0.2.0",
     "langchain-core>=0.3.0",
-    "langchain-anthropic>=0.3.0",
-    "langfuse>=2.0.0",
-
-    # Embedding
-    "sentence-transformers>=3.0.0",
+    "langchain-aws>=0.2.0",      # Bedrock 経由（langchain-anthropic から変更）
 
     # DB
     "psycopg2-binary>=2.9.0",
