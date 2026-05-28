@@ -46,32 +46,35 @@ def chat(
     )
 
     return StreamingResponse(
-        _sse_generator(message=request.message, session_id=request.session_id, fitbit_client=fitbit_client),
+        _sse_generator(
+            message=request.message, user_id=fitbit_user_id, fitbit_client=fitbit_client
+        ),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
-async def _sse_generator(message: str, session_id: str, fitbit_client: FitbitClient):
+async def _sse_generator(message: str, user_id: str, fitbit_client: FitbitClient):
     set_fitbit_client(fitbit_client)  # asyncio コンテキストでセットするためここで呼ぶ
-    config = {"configurable": {"thread_id": session_id}}
+    config = {"configurable": {"thread_id": user_id}}
     try:
         async for msg, metadata in _agent.astream(
-            {"messages": [HumanMessage(content=message)], "session_id": session_id},
+            {"messages": [HumanMessage(content=message)], "session_id": user_id},
             config=config,
             stream_mode="messages",
         ):
             if metadata.get("langgraph_node") != "agent_node":
                 continue
+
             content = msg.content
             if isinstance(content, list):
                 content = "".join(
                     block.get("text", "") for block in content if isinstance(block, dict)
                 )
             if content:
-                data = SSEChunk(type="chunk", content=content, session_id=session_id)
+                data = SSEChunk(type="chunk", content=content, session_id=user_id)
                 yield f"data: {data.model_dump_json()}\n\n"
 
-        yield f"data: {SSEChunk(type='done', session_id=session_id).model_dump_json()}\n\n"
+        yield f"data: {SSEChunk(type='done', session_id=user_id).model_dump_json()}\n\n"
     except Exception as e:
-        yield f"data: {SSEChunk(type='error', content=repr(e), session_id=session_id).model_dump_json()}\n\n"
+        yield f"data: {SSEChunk(type='error', content=repr(e), session_id=user_id).model_dump_json()}\n\n"
