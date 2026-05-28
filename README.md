@@ -158,9 +158,9 @@ iPad から `https://xxxx.ngrok-free.dev` にアクセスします。
 
 ```bash
 # 全テスト実行（LLM テストを除く）
-uv run pytest agent/tests/ app/tests/ --ignore=agent/tests/test_planning_tools_llm.py -q
+uv run pytest agent/tests/ backend/tests/ --ignore=agent/tests/test_planning_tools_llm.py -q
 
 # カバレッジ付き
-uv run pytest --cov=app --cov=agent --cov-report=term-missing \
+uv run pytest --cov=backend --cov=agent --cov-report=term-missing \
   --ignore=agent/tests/test_planning_tools_llm.py -q
 ```
