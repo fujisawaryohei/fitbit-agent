@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.router import router
+from backend.router import router
 
 app = FastAPI(title="Fitbit Agent API", version="1.0")
 

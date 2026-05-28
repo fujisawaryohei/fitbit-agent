@@ -5,7 +5,7 @@ from typing import Any
 
 import httpx
 
-from app.schemas.auth import TokenResponse
+from backend.schemas.auth import TokenResponse
 
 BASE_URL = "https://api.fitbit.com/1/user/-"
 AUTH_URL = "https://www.fitbit.com/oauth2/authorize"

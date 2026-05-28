@@ -1,7 +1,7 @@
 from agent.fitbit.client import FitbitClient
-from app.models.auth import CsrfState
-from app.models.user import User
-from app.repositories.user_repository import UserRepository
+from backend.models.auth import CsrfState
+from backend.models.user import User
+from backend.repositories.user_repository import UserRepository
 
 
 class InvalidStateError(Exception):

@@ -5,9 +5,9 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import RedirectResponse
 
 from agent.fitbit.client import FitbitClient
-from app.config.connection_pool import get_connection
-from app.repositories.user_repository import UserRepository
-from app.services.fitbit_service import FitbitService, InvalidStateError, StateExpiredError
+from backend.config.connection_pool import get_connection
+from backend.repositories.user_repository import UserRepository
+from backend.services.fitbit_service import FitbitService, InvalidStateError, StateExpiredError
 
 _FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 

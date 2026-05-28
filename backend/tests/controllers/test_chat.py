@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 with patch("langchain_aws.ChatBedrockConverse", MagicMock()):
     from fastapi import FastAPI
     from fastapi.testclient import TestClient
-    from app.controllers.chat import router as chat_router
+    from backend.controllers.chat import router as chat_router
 
 _app = FastAPI()
 _app.include_router(chat_router)
@@ -27,8 +27,8 @@ class TestChatAuth:
         assert "認証が必要です" in response.json()["detail"]
 
     def test_unknown_user_returns_401(self):
-        with patch("app.controllers.chat.get_connection", return_value=MagicMock()), \
-             patch("app.controllers.chat.UserRepository") as mock_repo_class:
+        with patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
+             patch("backend.controllers.chat.UserRepository") as mock_repo_class:
             mock_repo_class.return_value.find_by_fitbit_user_id.return_value = None
             client = TestClient(_app)
             client.cookies.set("fitbit_user_id", "unknown-user")
@@ -37,8 +37,8 @@ class TestChatAuth:
         assert "ユーザーが見つかりません" in response.json()["detail"]
 
     def test_expired_token_returns_401(self):
-        with patch("app.controllers.chat.get_connection", return_value=MagicMock()), \
-             patch("app.controllers.chat.UserRepository") as mock_repo_class:
+        with patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
+             patch("backend.controllers.chat.UserRepository") as mock_repo_class:
             mock_repo_class.return_value.find_by_fitbit_user_id.return_value = _make_mock_user(expired=True)
             client = TestClient(_app)
             client.cookies.set("fitbit_user_id", "ABC123")

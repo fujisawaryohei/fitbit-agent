@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.services.fitbit_service import FitbitService, InvalidStateError
+from backend.services.fitbit_service import FitbitService, InvalidStateError
 
 
 @pytest.fixture

@@ -1,7 +1,7 @@
 import logging
 
 from agent.memory.embedding import embed
-from app.config.connection_pool import get_connection, release_connection
+from backend.config.connection_pool import get_connection, release_connection
 
 logger = logging.getLogger(__name__)
 

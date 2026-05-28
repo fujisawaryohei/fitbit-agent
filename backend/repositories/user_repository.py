@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.models.user import User
+from backend.models.user import User
 
 
 class UserRepository:

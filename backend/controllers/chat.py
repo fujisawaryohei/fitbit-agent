@@ -7,9 +7,9 @@ from langchain_core.messages import HumanMessage
 from agent.context import set_fitbit_client
 from agent.fitbit.client import FitbitClient
 from agent.graph import get_agent
-from app.config.connection_pool import get_connection
-from app.repositories.user_repository import UserRepository
-from app.schemas.chat import ChatRequest, SSEChunk
+from backend.config.connection_pool import get_connection
+from backend.repositories.user_repository import UserRepository
+from backend.schemas.chat import ChatRequest, SSEChunk
 
 router = APIRouter()
 _agent = get_agent()

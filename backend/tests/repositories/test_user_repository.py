@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from app.models.user import User
-from app.repositories.user_repository import UserRepository
+from backend.models.user import User
+from backend.repositories.user_repository import UserRepository
 
 EXPIRES_AT = datetime(2026, 1, 1, tzinfo=timezone.utc)
 
