@@ -14,7 +14,7 @@ def make_llm_mock(content: str) -> MagicMock:
 class TestGenerateHomeWorkoutPlan:
     def test_returns_llm_response(self) -> None:
         llm_mock = make_llm_mock("週3日の運動プラン...")
-        with patch("agent.tools.planning_tools.ChatAnthropic", return_value=llm_mock):
+        with patch("agent.tools.planning_tools.ChatBedrockConverse", return_value=llm_mock):
             result = generate_home_workout_plan.invoke(  # type: ignore[union-attr]
                 {
                     "daily_deficit_kcal": 500,
@@ -28,7 +28,7 @@ class TestGenerateHomeWorkoutPlan:
 
     def test_prompt_contains_fitness_level(self) -> None:
         llm_mock = make_llm_mock("プラン")
-        with patch("agent.tools.planning_tools.ChatAnthropic", return_value=llm_mock):
+        with patch("agent.tools.planning_tools.ChatBedrockConverse", return_value=llm_mock):
             generate_home_workout_plan.invoke(  # type: ignore[union-attr]
                 {
                     "daily_deficit_kcal": 500,
@@ -44,7 +44,7 @@ class TestGenerateHomeWorkoutPlan:
 class TestGetWeeklyProgress:
     def test_returns_llm_response(self) -> None:
         llm_mock = make_llm_mock("順調に進んでいます。")
-        with patch("agent.tools.planning_tools.ChatAnthropic", return_value=llm_mock):
+        with patch("agent.tools.planning_tools.ChatBedrockConverse", return_value=llm_mock):
             result = get_weekly_progress.invoke(  # type: ignore[union-attr]
                 {
                     "current_weight_kg": 73.0,
@@ -58,7 +58,7 @@ class TestGetWeeklyProgress:
 
     def test_prompt_contains_weight_info(self) -> None:
         llm_mock = make_llm_mock("アドバイス")
-        with patch("agent.tools.planning_tools.ChatAnthropic", return_value=llm_mock):
+        with patch("agent.tools.planning_tools.ChatBedrockConverse", return_value=llm_mock):
             get_weekly_progress.invoke(  # type: ignore[union-attr]
                 {
                     "current_weight_kg": 73.0,

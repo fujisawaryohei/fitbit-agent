@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from langchain_anthropic import ChatAnthropic
+from langchain_aws import ChatBedrockConverse
 from langchain_core.tools import tool
 
 from agent.tools.models import CalorieDeficitResult
@@ -54,7 +54,7 @@ def generate_home_workout_plan(
 ) -> str:
     """自宅でできる運動プランを生成する。fitness_level は 'beginner'/'intermediate'/'advanced'。"""
 
-    llm = ChatAnthropic(model_name="claude-haiku-4-5-20251001")  # type: ignore[call-arg]
+    llm = ChatBedrockConverse(model="jp.anthropic.claude-haiku-4-5-20251001-v1:0")
     prompt = (
         f"以下の条件で、自宅でできる運動プランを日本語で生成してください。器具は不要とします。\n\n"
         f"- フィットネスレベル: {fitness_level}\n"
@@ -80,7 +80,7 @@ def get_weekly_progress(
 ) -> str:
     """週次の減量進捗をコーチ目線で評価・アドバイスする。"""
 
-    llm = ChatAnthropic(model_name="claude-haiku-4-5-20251001")  # type: ignore[call-arg]
+    llm = ChatBedrockConverse(model="jp.anthropic.claude-haiku-4-5-20251001-v1:0")
     actual_loss_kg = round(start_weight_kg - current_weight_kg, 1)
     expected_loss_kg = round(target_pace_kg_per_week * weeks_elapsed, 1)
 

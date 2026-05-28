@@ -1,17 +1,17 @@
-from sentence_transformers import SentenceTransformer
+from langchain_aws import BedrockEmbeddings
 
-_model: SentenceTransformer | None = None
+_embeddings: BedrockEmbeddings | None = None
 
 
-def get_embedding_model() -> SentenceTransformer:
-    global _model
-
-    if _model is None:
-        _model = SentenceTransformer("intfloat/multilingual-e5-large")
-    return _model
+def _get_embeddings() -> BedrockEmbeddings:
+    global _embeddings
+    if _embeddings is None:
+        _embeddings = BedrockEmbeddings(
+            model_id="amazon.titan-embed-text-v2:0",
+            region_name="ap-northeast-1",
+        )
+    return _embeddings
 
 
 def embed(text: str) -> list[float]:
-    model = get_embedding_model()
-    result = model.encode(text, normalize_embeddings=True)
-    return result.tolist()
+    return _get_embeddings().embed_query(text)

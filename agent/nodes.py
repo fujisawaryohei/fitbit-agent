@@ -1,7 +1,7 @@
 import textwrap
 
 from dotenv import load_dotenv
-from langchain_anthropic import ChatAnthropic
+from langchain_aws import ChatBedrockConverse
 from langchain_core.messages import AIMessage, AnyMessage, HumanMessage, SystemMessage
 from langgraph.graph import END
 from langgraph.prebuilt import ToolNode
@@ -34,7 +34,7 @@ _tools = [
     get_weekly_progress,
 ]
 
-_llm = ChatAnthropic(model_name="claude-haiku-4-5-20251001").bind_tools(_tools)  # type: ignore[call-arg]
+_llm = ChatBedrockConverse(model="jp.anthropic.claude-haiku-4-5-20251001-v1:0").bind_tools(_tools)
 
 
 def agent_node(state: AgentState) -> dict[str, list[AnyMessage]]:
@@ -50,7 +50,7 @@ def agent_node(state: AgentState) -> dict[str, list[AnyMessage]]:
         - 自宅でできる運動プラン作成
 
         **📈 進捗管理**
-        - 週単位の減量進捗評価
+        - 週単位の減量進捗評価こr
         - コーチ目線でのアドバイス
 
         何かお手伝いできることはありますか？例えば：
@@ -89,7 +89,7 @@ def memory_inject_node(state: AgentState) -> dict[str, list[AnyMessage]]:
 
 
 def memory_save_node(state: AgentState) -> dict[str, list[AnyMessage]]:
-    _summary_llm = ChatAnthropic(model_name="claude-haiku-4-5-20251001")  # type: ignore[call-arg]
+    _summary_llm = ChatBedrockConverse(model="jp.anthropic.claude-haiku-4-5-20251001-v1:0")
     conversation = "\n".join(
         f"{'User' if isinstance(m, HumanMessage) else 'Assistant'}: {m.content}"
         for m in state.messages
