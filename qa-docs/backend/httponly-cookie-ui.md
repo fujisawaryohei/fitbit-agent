@@ -38,5 +38,5 @@ function isFitbitConnected(): boolean {
 
 ## 対象ファイル
 
-- `app/controllers/auth.py`
+- `backend/controllers/auth.py`
 - `frontend/src/components/FitbitStatus.tsx`

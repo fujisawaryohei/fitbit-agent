@@ -54,5 +54,5 @@ Python の `ContextVar` は asyncio タスク内では継承されるが、
 
 ## 対象ファイル
 
-- `app/controllers/chat.py`
+- `backend/controllers/chat.py`
 - `agent/context.py`

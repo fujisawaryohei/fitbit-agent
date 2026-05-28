@@ -45,5 +45,5 @@ FRONTEND_URL=https://xxxx.ngrok-free.dev
 
 ## 対象ファイル
 
-- `app/controllers/auth.py`
+- `backend/controllers/auth.py`
 - `frontend/next.config.ts`

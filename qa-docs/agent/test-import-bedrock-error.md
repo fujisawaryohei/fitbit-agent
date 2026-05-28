@@ -5,7 +5,7 @@
 `pytest` でテストを収集する際に以下のエラーが発生し、関係のないテストまで失敗する。
 
 ```
-ERROR app/tests/controllers/test_health.py
+ERROR backend/tests/controllers/test_health.py
 pydantic_core._pydantic_core.ValidationError: 1 validation error for ChatBedrockConverse
   Value error, Could not load credentials to authenticate with AWS client.
 ```
@@ -15,7 +15,7 @@ pydantic_core._pydantic_core.ValidationError: 1 validation error for ChatBedrock
 `test_health.py` が `from server import app` でアプリ全体をインポートする。
 
 ```
-server.py → app/router.py → app/controllers/chat.py
+server.py → backend/router.py → backend/controllers/chat.py
   → _agent = get_agent()  ← モジュールレベルで実行
     → agent/nodes.py
       → _llm = ChatBedrockConverse(...)  ← インポート時に AWS 認証を試みる → 失敗
@@ -38,7 +38,7 @@ def test_health_returns_ok():
 
 # after
 from fastapi import FastAPI
-from app.controllers.health import router as health_router
+from backend.controllers.health import router as health_router
 
 _app = FastAPI()
 _app.include_router(health_router)
@@ -52,10 +52,10 @@ def test_health_returns_ok():
 
 ```python
 with patch("langchain_aws.ChatBedrockConverse", MagicMock()):
-    from app.controllers.chat import router as chat_router
+    from backend.controllers.chat import router as chat_router
 ```
 
 ## 対象ファイル
 
-- `app/tests/controllers/test_health.py`
-- `app/tests/controllers/test_chat.py`
+- `backend/tests/controllers/test_health.py`
+- `backend/tests/controllers/test_chat.py`
