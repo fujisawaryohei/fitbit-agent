@@ -1,18 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BACKEND_URL } from "@/lib/api";
 
-function getFitbitUserIdFromCookie(): string | null {
-  const match = document.cookie.match(/(?:^|;\s*)fitbit_user_id=([^;]+)/);
-  return match ? decodeURIComponent(match[1]) : null;
+function isFitbitConnected(): boolean {
+  return /(?:^|;\s*)fitbit_connected=true/.test(document.cookie);
 }
 
 export default function FitbitStatus() {
   const [connected, setConnected] = useState<boolean | null>(null);
 
   useEffect(() => {
-    setConnected(getFitbitUserIdFromCookie() !== null);
+    setConnected(isFitbitConnected());
   }, []);
 
   if (connected === null) return null;
@@ -26,7 +24,7 @@ export default function FitbitStatus() {
         </span>
       ) : (
         <a
-          href={`${BACKEND_URL}/auth/fitbit`}
+          href="/auth/fitbit"
           className="text-sm px-3 py-1.5 rounded-md bg-white text-[#00B0B9] font-medium hover:bg-gray-100 transition-colors"
         >
           Fitbit と連携する

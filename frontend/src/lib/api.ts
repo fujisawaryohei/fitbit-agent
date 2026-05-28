@@ -2,11 +2,6 @@ import type { SSEChunk } from "@/types/chat";
 
 export const BACKEND_URL = "/api";
 
-// TODO: ペアプロで実装
-// SSE ストリーミングで /chat を呼び出す
-// - onChunk: チャンク受信時のコールバック
-// - onDone: 完了時のコールバック
-// - onError: エラー時のコールバック
 export async function streamChat(
   message: string,
   sessionId: string,
@@ -14,5 +9,57 @@ export async function streamChat(
   onDone: () => void,
   onError: (error: string) => void
 ): Promise<void> {
-  throw new Error("Not implemented");
+  let response: Response;
+
+  try {
+    response = await fetch(`${BACKEND_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message, session_id: sessionId }),
+      credentials: "include",
+    });
+  } catch {
+    onError("サーバーに接続できません");
+    return;
+  }
+
+  if (!response.ok) {
+    const body = await response.json().catch(() => ({}));
+    onError(body.detail ?? `エラーが発生しました (${response.status})`);
+    return;
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    onError("ストリームを読み取れません");
+    return;
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    // SSE は "\n\n" でイベントを区切る
+    const parts = buffer.split("\n\n");
+    buffer = parts.pop() ?? "";
+
+    for (const part of parts) {
+      for (const line of part.split("\n")) {
+        if (!line.startsWith("data: ")) continue;
+        try {
+          const chunk: SSEChunk = JSON.parse(line.slice(6));
+          if (chunk.type === "chunk") onChunk(chunk);
+          else if (chunk.type === "done") onDone();
+          else if (chunk.type === "error") onError(chunk.content);
+        } catch {
+          // パース失敗は無視
+        }
+      }
+    }
+  }
 }

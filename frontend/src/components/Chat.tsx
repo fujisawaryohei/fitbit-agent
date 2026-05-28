@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import MessageList from "@/components/MessageList";
 import MessageInput from "@/components/MessageInput";
+import { streamChat } from "@/lib/api";
 import type { Message } from "@/types/chat";
 
 export default function Chat() {
@@ -30,11 +31,47 @@ export default function Chat() {
     setMessages((prev) => [...prev, userMessage, assistantMessage]);
     setStreaming(true);
 
-    // TODO: ペアプロで実装
-    // streamChat(text, sessionId.current, onChunk, onDone, onError) を呼び出す
-    // - onChunk: assistantMessage の content を更新
-    // - onDone: setStreaming(false)
-    // - onError: エラーメッセージを assistantMessage に設定して setStreaming(false)
+    try {
+      await streamChat(
+        text,
+        sessionId.current,
+        (chunk) => {
+          setMessages((prev) => {
+            const updated = [...prev];
+            const last = updated[updated.length - 1];
+            if (last.role === "assistant") {
+              updated[updated.length - 1] = {
+                ...last,
+                content: last.content + chunk.content,
+              };
+            }
+            return updated;
+          });
+        },
+        () => setStreaming(false),
+        (error) => {
+          setMessages((prev) => {
+            const updated = [...prev];
+            updated[updated.length - 1] = {
+              ...updated[updated.length - 1],
+              content: `エラー: ${error}`,
+            };
+            return updated;
+          });
+          setStreaming(false);
+        }
+      );
+    } catch (e) {
+      setMessages((prev) => {
+        const updated = [...prev];
+        updated[updated.length - 1] = {
+          ...updated[updated.length - 1],
+          content: `エラー: ${e instanceof Error ? e.message : String(e)}`,
+        };
+        return updated;
+      });
+      setStreaming(false);
+    }
   }
 
   return (

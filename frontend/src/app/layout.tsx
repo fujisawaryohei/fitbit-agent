@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import "./globals.css";
+import Link from "next/link";
 import FitbitStatus from "@/components/FitbitStatus";
+import Eruda from "@/components/Eruda";
 
 const geist = Geist({ subsets: ["latin"] });
 
@@ -14,10 +16,10 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ja" className={`${geist.className} h-full`}>
+    <html lang="ja" className={`${geist.className} h-full`} suppressHydrationWarning>
       <body className="h-full flex flex-col bg-gray-50 text-gray-900 antialiased">
         <header className="flex items-center justify-between px-5 py-3 bg-[#00B0B9] text-white shrink-0 shadow-sm">
-          <div className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
             <svg
               width="20"
               height="20"
@@ -30,10 +32,12 @@ export default function RootLayout({
             <span className="text-sm font-semibold tracking-wide">
               Fitbit AI アシスタント
             </span>
-          </div>
+          </Link>
           <FitbitStatus />
         </header>
         <main className="flex-1 overflow-hidden">{children}</main>
+        {/* デバッグ用 Eruda コンソール（不要になったら削除） */}
+        <Eruda />
       </body>
     </html>
   );
