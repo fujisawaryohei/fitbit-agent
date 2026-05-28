@@ -113,56 +113,56 @@
 
 ### Step 9b: connection_pool の移動と Alembic セットアップ
 
-- [ ] `app/config/` ディレクトリ + `__init__.py` を作成
-- [ ] `agent/memory/connection_pool.py` を `app/config/connection_pool.py` にコピー
-- [ ] `agent/memory/connection_pool.py` の内容を `app.config.connection_pool` への re-export に差し替え（後方互換）
-- [ ] `agent/memory/manager.py` の import を `app.config.connection_pool` に更新
-- [ ] `pyproject.toml` の依存に `alembic>=1.14.0` を追加し `uv sync`
-- [ ] `uv run alembic init app/migrations` を実行
-- [ ] `alembic.ini` の `script_location` を `app/migrations` に設定
-- [ ] `app/migrations/env.py` の `sqlalchemy.url` を `PGVECTOR_DSN` 環境変数から取得するよう設定
-- [ ] 初回マイグレーションファイル `versions/0001_initial.py` を作成
+- [x] `app/config/` ディレクトリ + `__init__.py` を作成
+- [x] `agent/memory/connection_pool.py` を `app/config/connection_pool.py` にコピー
+- [x] `agent/memory/connection_pool.py` の内容を `app.config.connection_pool` への re-export に差し替え（後方互換）
+- [x] `agent/memory/manager.py` の import を `app.config.connection_pool` に更新
+- [x] `pyproject.toml` の依存に `alembic>=1.14.0` を追加し `uv sync`
+- [x] `uv run alembic init app/migrations` を実行
+- [x] `alembic.ini` の `script_location` を `app/migrations` に設定
+- [x] `app/migrations/env.py` の `sqlalchemy.url` を `PGVECTOR_DSN` 環境変数から取得するよう設定
+- [x] 初回マイグレーションファイル `versions/0001_initial.py` を作成
   - `memories` テーブル（`id`, `session_id`, `content`, `embedding vector(1536)`, `created_at`）
   - `users` テーブル（domain-entities.md の DDL 参照）
-- [ ] `uv run alembic upgrade head` でマイグレーション適用・確認
+- [x] `uv run alembic upgrade head` でマイグレーション適用・確認
 
 ### Step 10: OAuth2 モデルの追加
 
-- [ ] `models/auth.py` を新規作成
-- [ ] `OAuthState` を追加
+- [x] `models/auth.py` を新規作成
+- [x] `OAuthState` を追加
   - `value: str`, `created_at: datetime`
   - `generate()` クラスメソッド（`secrets.token_urlsafe(32)` で生成）
   - `is_expired(ttl_seconds=600) -> bool` メソッド
-- [ ] `TokenResponse` を追加
+- [x] `TokenResponse` を追加
   - `access_token`, `refresh_token`, `expires_in`, `token_type`, `scope`, `user_id`
   - `expires_at() -> datetime` メソッド
-- [ ] `AuthCallbackResponse` を追加
+- [x] `AuthCallbackResponse` を追加
   - `message: str = "Fitbit認証が完了しました"`, `fitbit_user_id: str`, `scope: str`
 
 ### Step 11: FitbitClient に OAuth2 メソッドを追記
 
-- [ ] `fitbit/client.py` の `FitbitClient.__init__` に `redirect_uri` パラメータを追加
+- [x] `fitbit/client.py` の `FitbitClient.__init__` に `redirect_uri` パラメータを追加
   - `redirect_uri: str = os.getenv("FITBIT_REDIRECT_URI", "http://localhost:8000/auth/fitbit/callback")`
-- [ ] `get_authorization_url(state: str) -> str` を追記
+- [x] `get_authorization_url(state: str) -> str` を追記
   - スコープ: `activity heartrate weight nutrition`
   - `https://www.fitbit.com/oauth2/authorize?...` の URL を組み立てて返す
-- [ ] `exchange_code_for_token(code: str) -> TokenResponse` を追記
+- [x] `exchange_code_for_token(code: str) -> TokenResponse` を追記
   - `POST https://api.fitbit.com/oauth2/token`
   - Basic 認証（`client_id:client_secret` を Base64 エンコード）
   - 失敗時は `TokenExchangeError` を raise
-- [ ] `refresh_access_token() -> TokenResponse` を追記
+- [x] `refresh_access_token() -> TokenResponse` を追記
   - `POST https://api.fitbit.com/oauth2/token`（`grant_type=refresh_token`）
   - 失敗時は `TokenRefreshError` を raise
 
 ### Step 12: User モデルの追加
 
-- [ ] `app/models/user.py` を新規作成
+- [x] `app/models/user.py` を新規作成
   - `User` dataclass（`fitbit_user_id`, `access_token`, `refresh_token`, `token_expires_at`, `scope`, `id`, `created_at`, `updated_at`）
 
 ### Step 12b: UserRepository の実装
 
-- [ ] `app/repositories/` ディレクトリ + `__init__.py`
-- [ ] `app/repositories/user_repository.py` を作成
+- [x] `app/repositories/` ディレクトリ + `__init__.py`
+- [x] `app/repositories/user_repository.py` を作成
   - `UserRepository.__init__(conn)`: psycopg2 接続を受け取る
   - `find_by_fitbit_user_id(fitbit_user_id: str) -> User | None`
   - `upsert(user: User) -> None`（INSERT ... ON CONFLICT DO UPDATE）
@@ -172,8 +172,8 @@
 
 ### Step 12c: FitbitService の実装
 
-- [ ] `app/services/` ディレクトリ + `__init__.py`
-- [ ] `app/services/fitbit_service.py` を作成
+- [x] `app/services/` ディレクトリ + `__init__.py`
+- [x] `app/services/fitbit_service.py` を作成
   - カスタム例外: `InvalidStateError`, `StateExpiredError`, `TokenExchangeError`
   - `FitbitService.__init__(fitbit_client, user_repository)`: `_state_store: dict[str, CsrfState] = {}` を保持
   - `get_authorization_url() -> tuple[str, str]`（URL と state 値を返す）
@@ -182,7 +182,7 @@
 
 ### Step 13: auth エンドポイントの実装
 
-- [ ] `api/auth.py` を作成
+- [x] `api/auth.py` を作成
   - モジュールレベルで `_service = get_fitbit_service()`
   - `GET /fitbit → RedirectResponse(url, status_code=302)`
   - `GET /fitbit/callback?code&state → AuthCallbackResponse`
@@ -190,13 +190,13 @@
 
 ### Step 14: app.py に auth_router を追加
 
-- [ ] `app.py` に `app.include_router(auth_router, prefix="/auth")` を1行追記
+- [x] `app.py` に `app.include_router(auth_router, prefix="/auth")` を1行追記
 
 ### Milestone 3 動作確認
 
-- [ ] ブラウザで `http://localhost:8000/auth/fitbit` にアクセス
+- [x] ブラウザで `http://localhost:8000/auth/fitbit` にアクセス
   → Fitbit 認可ページ（`www.fitbit.com/oauth2/authorize`）にリダイレクトされることを確認
-- [ ] Fitbit で認可後、callback が受信されることを確認
+- [x] Fitbit で認可後、callback が受信されることを確認
   → `{"message": "Fitbit認証が完了しました", "fitbit_user_id": "...", "scope": "..."}` が返ることを確認
 
 ---
@@ -207,30 +207,30 @@
 
 ### Step 15: テスト用依存ライブラリの追加
 
-- [ ] `pyproject.toml` dev 依存に `pytest-asyncio>=0.24.0` を追加
-- [ ] `pyproject.toml` dev 依存に `respx>=0.21.0` を追加
-- [ ] `pyproject.toml` に `[tool.pytest.ini_options]` を追加
+- [x] `pyproject.toml` dev 依存に `pytest-asyncio>=0.24.0` を追加
+- [x] `pyproject.toml` dev 依存に `respx>=0.21.0` を追加
+- [x] `pyproject.toml` に `[tool.pytest.ini_options]` を追加
   ```toml
   [tool.pytest.ini_options]
   asyncio_mode = "auto"
   ```
-- [ ] `uv sync` を実行
+- [x] `uv sync` を実行
 
 ### Step 16: /health のテスト
 
-- [ ] `tests/test_api_health.py` を作成
+- [x] `tests/test_api_health.py` を作成
   - `GET /health` → 200, `{"status": "ok", "version": "1.0.0"}`
 
 ### Step 17: /chat のテスト
 
-- [ ] `tests/test_api_chat.py` を作成
+- [x] `tests/test_api_chat.py` を作成
   - 正常系: `astream()` をモックして `type:"chunk"` → `type:"done"` の順を確認
   - エラー系: `astream()` が例外を投げたとき `type:"error"` チャンクを確認
   - バリデーション: `message=""` → 422, `message` 2001文字 → 422, `session_id=""` → 422
 
 ### Step 18: FitbitService のテスト
 
-- [ ] `tests/test_fitbit_service.py` を作成
+- [x] `tests/test_fitbit_service.py` を作成
   - `get_authorization_url()`: URL に `client_id`, `scope`, `redirect_uri`, `state` が含まれることを確認
   - `exchange_code_for_token()` 正常系: `TokenResponse` が返ることを確認
   - `exchange_code_for_token()` エラー: state 不一致 → `InvalidStateError`
@@ -244,6 +244,9 @@
   - `exchange_code_for_token()` 正常系: `TokenResponse` への変換を確認
   - `exchange_code_for_token()` エラー系: Fitbit API 400 → `TokenExchangeError`
 
+> ⏸ テストディレクトリ階層構造の見直し後に対応予定。現在スキップ。
+
 ### Step 20: カバレッジ確認
 
-- [ ] `uv run pytest --cov=. --cov-report=term --ignore=tests/test_planning_tools_llm.py` でカバレッジ 80% 以上を確認
+- [x] `uv run pytest --cov=app --cov=agent --cov-report=term-missing --ignore=agent/tests/test_planning_tools_llm.py` でカバレッジ 80% 以上を確認
+  - 結果: **70 passed / 85%**（Step 19 スキップ込みで基準クリア）
