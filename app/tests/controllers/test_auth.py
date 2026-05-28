@@ -50,6 +50,7 @@ class TestCallback:
         assert body["fitbit_user_id"] == "ABC123"
         assert body["scope"] == "activity heartrate"
         assert body["message"] == "Fitbit認証が完了しました"
+        assert response.cookies.get("fitbit_user_id") == "ABC123"
 
     def test_invalid_state_returns_400(self):
         mock_service = _make_mock_service()

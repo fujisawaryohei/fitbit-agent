@@ -34,7 +34,7 @@ _tools = [
     get_weekly_progress,
 ]
 
-_llm = ChatBedrockConverse(model="jp.anthropic.claude-haiku-4-5-20251001-v1:0").bind_tools(_tools)
+_llm = ChatBedrockConverse(model="jp.anthropic.claude-haiku-4-5-20251001-v1:0", region_name="ap-northeast-1").bind_tools(_tools)
 
 
 def agent_node(state: AgentState) -> dict[str, list[AnyMessage]]:
@@ -89,7 +89,7 @@ def memory_inject_node(state: AgentState) -> dict[str, list[AnyMessage]]:
 
 
 def memory_save_node(state: AgentState) -> dict[str, list[AnyMessage]]:
-    _summary_llm = ChatBedrockConverse(model="jp.anthropic.claude-haiku-4-5-20251001-v1:0")
+    _summary_llm = ChatBedrockConverse(model="jp.anthropic.claude-haiku-4-5-20251001-v1:0", region_name="ap-northeast-1")
     conversation = "\n".join(
         f"{'User' if isinstance(m, HumanMessage) else 'Assistant'}: {m.content}"
         for m in state.messages
