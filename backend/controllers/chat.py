@@ -1,6 +1,7 @@
 import os
 
-from fastapi import APIRouter, Cookie, HTTPException
+from dependency_injector.wiring import Provide, inject
+from fastapi import APIRouter, Cookie, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import HumanMessage
 
@@ -8,6 +9,7 @@ from agent.context import set_fitbit_client
 from agent.fitbit.client import FitbitClient
 from agent.graph import get_agent
 from backend.config.connection_pool import get_connection, release_connection
+from backend.containers import Container
 from backend.models.chat import Chat
 from backend.models.message import Message
 from backend.models.message_role import MessageRole
@@ -21,33 +23,31 @@ _agent = get_agent()
 
 
 @router.post("/chat")
+@inject
 def chat(
     request: ChatRequest,
     fitbit_user_id: str | None = Cookie(default=None),
+    user_repo: UserRepository = Depends(Provide[Container.user_repo]),
+    chat_repo: ChatRepository = Depends(Provide[Container.chat_repo]),
 ) -> StreamingResponse:
     if fitbit_user_id is None:
         raise HTTPException(
             status_code=401, detail="認証が必要です。先に /auth/fitbit で認証してください。"
         )
 
-    conn = get_connection()
-    user = UserRepository(conn).find_by_fitbit_user_id(fitbit_user_id)
+    user = user_repo.find_by_fitbit_user_id(fitbit_user_id)
 
     if user is None:
-        release_connection(conn)
         raise HTTPException(
             status_code=401, detail="ユーザーが見つかりません。再認証してください。"
         )
 
     if user.is_token_expired():
-        release_connection(conn)
         raise HTTPException(
             status_code=401, detail="アクセストークンの有効期限が切れています。再認証してください。"
         )
 
-    chat_id = ChatRepository(conn).insert(
-        Chat(user_id=user.id, title=request.message[:50])
-    )
+    chat_id = chat_repo.insert(Chat(user_id=user.id, title=request.message[:50]))
 
     fitbit_client = FitbitClient(
         client_id=os.getenv("FITBIT_CLIENT_ID", ""),
@@ -56,6 +56,9 @@ def chat(
         refresh_token=user.refresh_token,
     )
 
+    # _sse_generator は StreamingResponse 返却後も動き続けるため
+    # conn のライフサイクルを DI に委ねず手動管理する
+    conn = get_connection()
     return StreamingResponse(
         _sse_generator(
             message=request.message,
@@ -77,7 +80,7 @@ async def _sse_generator(
     fitbit_client: FitbitClient,
 ):
     set_fitbit_client(fitbit_client)
-    config = {"configurable": {"thread_id": str(chat_id)}}  # 短期メモリはチャット単位
+    config = {"configurable": {"thread_id": str(chat_id)}}
     message_repo = MessageRepository(conn)
 
     message_repo.insert(Message(chat_id=chat_id, role=MessageRole.USER, content=message))
@@ -85,7 +88,7 @@ async def _sse_generator(
     assistant_content = ""
     try:
         async for msg, metadata in _agent.astream(
-            {"messages": [HumanMessage(content=message)], "session_id": str(user_id)},  # 長期メモリはユーザー単位
+            {"messages": [HumanMessage(content=message)], "session_id": str(user_id)},
             config=config,
             stream_mode="messages",
         ):

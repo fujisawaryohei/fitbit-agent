@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -27,9 +27,9 @@ def _make_mock_user(fitbit_user_id: str = "ABC123", scope: str = "activity heart
 
 
 class TestAuthorizationUrl:
-    def test_redirects_to_fitbit(self):
+    def test_redirects_to_fitbit(self, container):
         mock_service = _make_mock_service()
-        with patch("backend.controllers.auth._get_service", return_value=mock_service):
+        with container.fitbit_service.override(mock_service):
             client = TestClient(_app, follow_redirects=False)
             response = client.get("/auth/fitbit")
         assert response.status_code in (302, 307)
@@ -37,10 +37,10 @@ class TestAuthorizationUrl:
 
 
 class TestCallback:
-    def test_redirects_to_frontend(self):
+    def test_redirects_to_frontend(self, container):
         mock_service = _make_mock_service()
         mock_service.exchange_code_for_token.return_value = _make_mock_user()
-        with patch("backend.controllers.auth._get_service", return_value=mock_service):
+        with container.fitbit_service.override(mock_service):
             client = TestClient(_app, follow_redirects=False)
             response = client.get(
                 "/auth/fitbit/callback", params={"code": "auth-code", "state": "test-state"}
@@ -49,10 +49,10 @@ class TestCallback:
         assert response.cookies.get("fitbit_user_id") == "ABC123"
         assert response.cookies.get("fitbit_connected") == "true"
 
-    def test_invalid_state_returns_400(self):
+    def test_invalid_state_returns_400(self, container):
         mock_service = _make_mock_service()
         mock_service.exchange_code_for_token.side_effect = InvalidStateError()
-        with patch("backend.controllers.auth._get_service", return_value=mock_service):
+        with container.fitbit_service.override(mock_service):
             client = TestClient(_app)
             response = client.get(
                 "/auth/fitbit/callback", params={"code": "auth-code", "state": "bad-state"}
@@ -60,10 +60,10 @@ class TestCallback:
         assert response.status_code == 400
         assert response.json()["detail"] == "不正なリクエストです"
 
-    def test_expired_state_returns_400(self):
+    def test_expired_state_returns_400(self, container):
         mock_service = _make_mock_service()
         mock_service.exchange_code_for_token.side_effect = StateExpiredError()
-        with patch("backend.controllers.auth._get_service", return_value=mock_service):
+        with container.fitbit_service.override(mock_service):
             client = TestClient(_app)
             response = client.get(
                 "/auth/fitbit/callback", params={"code": "auth-code", "state": "expired-state"}

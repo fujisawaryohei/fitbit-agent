@@ -22,13 +22,11 @@ def _make_mock_user(expired: bool = False) -> MagicMock:
 
 
 def _make_sse_stream(*chunks: str):
-    """SSE チャンクを yield する AsyncMock を生成する。"""
     from langchain_core.messages import AIMessage
 
     async def _gen():
         for chunk in chunks:
-            msg = AIMessage(content=chunk)
-            yield msg, {"langgraph_node": "agent_node"}
+            yield AIMessage(content=chunk), {"langgraph_node": "agent_node"}
 
     mock = MagicMock()
     mock.astream.return_value = _gen()
@@ -42,22 +40,22 @@ class TestChatAuth:
         assert response.status_code == 401
         assert "認証が必要です" in response.json()["detail"]
 
-    def test_unknown_user_returns_401(self):
-        with patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
-             patch("backend.controllers.chat.release_connection"), \
-             patch("backend.controllers.chat.UserRepository") as mock_repo_class:
-            mock_repo_class.return_value.find_by_fitbit_user_id.return_value = None
+    def test_unknown_user_returns_401(self, container):
+        mock_user_repo = MagicMock()
+        mock_user_repo.find_by_fitbit_user_id.return_value = None
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(MagicMock()):
             client = TestClient(_app)
             client.cookies.set("fitbit_user_id", "unknown-user")
             response = client.post("/chat", json={"message": "こんにちは"})
         assert response.status_code == 401
         assert "ユーザーが見つかりません" in response.json()["detail"]
 
-    def test_expired_token_returns_401(self):
-        with patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
-             patch("backend.controllers.chat.release_connection"), \
-             patch("backend.controllers.chat.UserRepository") as mock_repo_class:
-            mock_repo_class.return_value.find_by_fitbit_user_id.return_value = _make_mock_user(expired=True)
+    def test_expired_token_returns_401(self, container):
+        mock_user_repo = MagicMock()
+        mock_user_repo.find_by_fitbit_user_id.return_value = _make_mock_user(expired=True)
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(MagicMock()):
             client = TestClient(_app)
             client.cookies.set("fitbit_user_id", "ABC123")
             response = client.post("/chat", json={"message": "こんにちは"})
@@ -66,19 +64,25 @@ class TestChatAuth:
 
 
 class TestChatStreaming:
-    def test_sse_chunks_and_done_are_returned(self):
+    def _setup(self, user, chat_id=42):
+        mock_user_repo = MagicMock()
+        mock_user_repo.find_by_fitbit_user_id.return_value = user
+        mock_chat_repo = MagicMock()
+        mock_chat_repo.insert.return_value = chat_id
+        mock_msg_repo = MagicMock()
+        return mock_user_repo, mock_chat_repo, mock_msg_repo
+
+    def test_sse_chunks_and_done_are_returned(self, container):
         user = _make_mock_user()
         agent = _make_sse_stream("今日", "の歩数は")
+        mock_user_repo, mock_chat_repo, mock_msg_repo = self._setup(user)
 
-        with patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(mock_chat_repo), \
+             patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
              patch("backend.controllers.chat.release_connection"), \
-             patch("backend.controllers.chat.UserRepository") as mock_user_repo, \
-             patch("backend.controllers.chat.ChatRepository") as mock_chat_repo, \
-             patch("backend.controllers.chat.MessageRepository"), \
+             patch("backend.controllers.chat.MessageRepository", return_value=mock_msg_repo), \
              patch("backend.controllers.chat._agent", agent):
-
-            mock_user_repo.return_value.find_by_fitbit_user_id.return_value = user
-            mock_chat_repo.return_value.insert.return_value = 42
 
             client = TestClient(_app)
             client.cookies.set("fitbit_user_id", "ABC123")
@@ -94,73 +98,65 @@ class TestChatStreaming:
         assert "chunk" in types
         assert types[-1] == "done"
 
-    def test_user_message_is_saved_to_db(self):
+    def test_user_message_is_saved_to_db(self, container):
         user = _make_mock_user()
         agent = _make_sse_stream("応答")
+        mock_user_repo, mock_chat_repo, mock_msg_repo = self._setup(user)
 
-        with patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(mock_chat_repo), \
+             patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
              patch("backend.controllers.chat.release_connection"), \
-             patch("backend.controllers.chat.UserRepository") as mock_user_repo, \
-             patch("backend.controllers.chat.ChatRepository") as mock_chat_repo, \
-             patch("backend.controllers.chat.MessageRepository") as mock_msg_repo, \
+             patch("backend.controllers.chat.MessageRepository", return_value=mock_msg_repo), \
              patch("backend.controllers.chat._agent", agent):
-
-            mock_user_repo.return_value.find_by_fitbit_user_id.return_value = user
-            mock_chat_repo.return_value.insert.return_value = 42
 
             client = TestClient(_app)
             client.cookies.set("fitbit_user_id", "ABC123")
             with client.stream("POST", "/chat", json={"message": "今日の歩数は？"}):
                 pass
 
-            insert_calls = mock_msg_repo.return_value.insert.call_args_list
-            roles = [call.args[0].role for call in insert_calls]
-            assert "user" in [str(r) for r in roles]
+        roles = [str(call.args[0].role) for call in mock_msg_repo.insert.call_args_list]
+        assert "user" in roles
 
-    def test_assistant_message_is_saved_to_db(self):
+    def test_assistant_message_is_saved_to_db(self, container):
         user = _make_mock_user()
         agent = _make_sse_stream("8000歩です。")
+        mock_user_repo, mock_chat_repo, mock_msg_repo = self._setup(user)
 
-        with patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(mock_chat_repo), \
+             patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
              patch("backend.controllers.chat.release_connection"), \
-             patch("backend.controllers.chat.UserRepository") as mock_user_repo, \
-             patch("backend.controllers.chat.ChatRepository") as mock_chat_repo, \
-             patch("backend.controllers.chat.MessageRepository") as mock_msg_repo, \
+             patch("backend.controllers.chat.MessageRepository", return_value=mock_msg_repo), \
              patch("backend.controllers.chat._agent", agent):
-
-            mock_user_repo.return_value.find_by_fitbit_user_id.return_value = user
-            mock_chat_repo.return_value.insert.return_value = 42
 
             client = TestClient(_app)
             client.cookies.set("fitbit_user_id", "ABC123")
             with client.stream("POST", "/chat", json={"message": "今日の歩数は？"}):
                 pass
 
-            insert_calls = mock_msg_repo.return_value.insert.call_args_list
-            roles = [str(call.args[0].role) for call in insert_calls]
-            contents = [call.args[0].content for call in insert_calls]
-            assert "assistant" in roles
-            assert "8000歩です。" in contents
+        roles = [str(call.args[0].role) for call in mock_msg_repo.insert.call_args_list]
+        contents = [call.args[0].content for call in mock_msg_repo.insert.call_args_list]
+        assert "assistant" in roles
+        assert "8000歩です。" in contents
 
-    def test_chat_is_created_with_message_title(self):
+    def test_chat_is_created_with_message_title(self, container):
         user = _make_mock_user()
         agent = _make_sse_stream("応答")
+        mock_user_repo, mock_chat_repo, mock_msg_repo = self._setup(user)
 
-        with patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(mock_chat_repo), \
+             patch("backend.controllers.chat.get_connection", return_value=MagicMock()), \
              patch("backend.controllers.chat.release_connection"), \
-             patch("backend.controllers.chat.UserRepository") as mock_user_repo, \
-             patch("backend.controllers.chat.ChatRepository") as mock_chat_repo, \
-             patch("backend.controllers.chat.MessageRepository"), \
+             patch("backend.controllers.chat.MessageRepository", return_value=mock_msg_repo), \
              patch("backend.controllers.chat._agent", agent):
-
-            mock_user_repo.return_value.find_by_fitbit_user_id.return_value = user
-            mock_chat_repo.return_value.insert.return_value = 42
 
             client = TestClient(_app)
             client.cookies.set("fitbit_user_id", "ABC123")
             with client.stream("POST", "/chat", json={"message": "今日の歩数は？"}):
                 pass
 
-            inserted_chat = mock_chat_repo.return_value.insert.call_args.args[0]
-            assert inserted_chat.user_id == user.id
-            assert inserted_chat.title == "今日の歩数は？"
+        inserted_chat = mock_chat_repo.insert.call_args.args[0]
+        assert inserted_chat.user_id == user.id
+        assert inserted_chat.title == "今日の歩数は？"
