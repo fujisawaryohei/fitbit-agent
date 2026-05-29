@@ -7,9 +7,10 @@ import { streamChat } from "@/lib/api";
 type NewChatModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  onChatCreated?: () => void;
 };
 
-export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
+export default function NewChatModal({ isOpen, onClose, onChatCreated }: NewChatModalProps) {
   const router = useRouter();
   const [text, setText] = useState("");
   const [streaming, setStreaming] = useState(false);
@@ -29,6 +30,9 @@ export default function NewChatModal({ isOpen, onClose }: NewChatModalProps) {
       () => {},
       (chatId?: number) => {
         setStreaming(false);
+        setText("");
+        onClose();
+        onChatCreated?.();
         if (chatId != null) {
           router.push(`/chat/${chatId}`);
         } else {

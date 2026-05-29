@@ -12,21 +12,17 @@ export default function ChatHistory() {
   const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
 
-  useEffect(() => {
-    let active = true;
+  function loadChats() {
+    setLoading(true);
+    setError(null);
     fetchChats()
-      .then((data) => {
-        if (active) setChats(data);
-      })
-      .catch((e) => {
-        if (active) setError(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
+      .then((data) => setChats(data))
+      .catch((e) => setError(e instanceof Error ? e.message : String(e)))
+      .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadChats();
   }, []);
 
   return (
@@ -73,7 +69,11 @@ export default function ChatHistory() {
         )}
       </div>
 
-      <NewChatModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
+      <NewChatModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        onChatCreated={loadChats}
+      />
     </div>
   );
 }
