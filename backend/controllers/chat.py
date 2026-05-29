@@ -7,7 +7,12 @@ from langchain_core.messages import HumanMessage
 from agent.context import set_fitbit_client
 from agent.fitbit.client import FitbitClient
 from agent.graph import get_agent
-from backend.config.connection_pool import get_connection
+from backend.config.connection_pool import get_connection, release_connection
+from backend.models.chat import Chat
+from backend.models.message import Message
+from backend.models.message_role import MessageRole
+from backend.repositories.chat_repository import ChatRepository
+from backend.repositories.message_repository import MessageRepository
 from backend.repositories.user_repository import UserRepository
 from backend.schemas.chat import ChatRequest, SSEChunk
 
@@ -29,14 +34,20 @@ def chat(
     user = UserRepository(conn).find_by_fitbit_user_id(fitbit_user_id)
 
     if user is None:
+        release_connection(conn)
         raise HTTPException(
             status_code=401, detail="ユーザーが見つかりません。再認証してください。"
         )
 
     if user.is_token_expired():
+        release_connection(conn)
         raise HTTPException(
             status_code=401, detail="アクセストークンの有効期限が切れています。再認証してください。"
         )
+
+    chat_id = ChatRepository(conn).insert(
+        Chat(user_id=user.id, title=request.message[:50])
+    )
 
     fitbit_client = FitbitClient(
         client_id=os.getenv("FITBIT_CLIENT_ID", ""),
@@ -47,19 +58,34 @@ def chat(
 
     return StreamingResponse(
         _sse_generator(
-            message=request.message, user_id=fitbit_user_id, fitbit_client=fitbit_client
+            message=request.message,
+            user_id=user.id,
+            chat_id=chat_id,
+            conn=conn,
+            fitbit_client=fitbit_client,
         ),
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
 
 
-async def _sse_generator(message: str, user_id: str, fitbit_client: FitbitClient):
-    set_fitbit_client(fitbit_client)  # asyncio コンテキストでセットするためここで呼ぶ
-    config = {"configurable": {"thread_id": user_id}}
+async def _sse_generator(
+    message: str,
+    user_id: int,
+    chat_id: int,
+    conn,
+    fitbit_client: FitbitClient,
+):
+    set_fitbit_client(fitbit_client)
+    config = {"configurable": {"thread_id": str(chat_id)}}  # 短期メモリはチャット単位
+    message_repo = MessageRepository(conn)
+
+    message_repo.insert(Message(chat_id=chat_id, role=MessageRole.USER, content=message))
+
+    assistant_content = ""
     try:
         async for msg, metadata in _agent.astream(
-            {"messages": [HumanMessage(content=message)], "session_id": user_id},
+            {"messages": [HumanMessage(content=message)], "session_id": str(user_id)},  # 長期メモリはユーザー単位
             config=config,
             stream_mode="messages",
         ):
@@ -72,9 +98,17 @@ async def _sse_generator(message: str, user_id: str, fitbit_client: FitbitClient
                     block.get("text", "") for block in content if isinstance(block, dict)
                 )
             if content:
-                data = SSEChunk(type="chunk", content=content, session_id=user_id)
+                assistant_content += content
+                data = SSEChunk(type="chunk", content=content, session_id=str(user_id))
                 yield f"data: {data.model_dump_json()}\n\n"
 
-        yield f"data: {SSEChunk(type='done', session_id=user_id).model_dump_json()}\n\n"
+        if assistant_content:
+            message_repo.insert(
+                Message(chat_id=chat_id, role=MessageRole.ASSISTANT, content=assistant_content)
+            )
+
+        yield f"data: {SSEChunk(type='done', session_id=str(user_id)).model_dump_json()}\n\n"
     except Exception as e:
-        yield f"data: {SSEChunk(type='error', content=repr(e), session_id=user_id).model_dump_json()}\n\n"
+        yield f"data: {SSEChunk(type='error', content=repr(e), session_id=str(user_id)).model_dump_json()}\n\n"
+    finally:
+        release_connection(conn)
