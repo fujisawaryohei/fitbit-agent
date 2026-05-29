@@ -9,3 +9,11 @@ export type Message = {
   role: "user" | "assistant";
   content: string;
 };
+
+export type ChatMessage = {
+  id: number;
+  chat_id: number;
+  role: "user" | "assistant";
+  content: string;
+  created_at: string;
+};

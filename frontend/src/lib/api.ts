@@ -1,6 +1,16 @@
-import type { SSEChunk } from "@/types/chat";
+import type { ChatMessage, SSEChunk } from "@/types/chat";
 
 export const BACKEND_URL = "/api";
+
+export async function fetchMessages(chatId: number): Promise<ChatMessage[]> {
+  const response = await fetch(`${BACKEND_URL}/chats/${chatId}/messages`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`メッセージの取得に失敗しました (${response.status})`);
+  }
+  return response.json();
+}
 
 export async function streamChat(
   message: string,

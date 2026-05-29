@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, field_validator
@@ -21,3 +22,11 @@ class SSEChunk(BaseModel):
     type: Literal["chunk", "done", "error"]
     content: str = ""
     session_id: str = ""
+
+
+class ChatMessageResponse(BaseModel):
+    id: int
+    chat_id: int
+    role: str
+    content: str
+    created_at: datetime

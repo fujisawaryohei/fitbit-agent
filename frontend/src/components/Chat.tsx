@@ -6,8 +6,8 @@ import MessageInput from "@/components/MessageInput";
 import { streamChat } from "@/lib/api";
 import type { Message } from "@/types/chat";
 
-export default function Chat() {
-  const [messages, setMessages] = useState<Message[]>([]);
+export default function Chat({ initialMessages = [] }: { initialMessages?: Message[] }) {
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [streaming, setStreaming] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
