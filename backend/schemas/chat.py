@@ -22,6 +22,13 @@ class SSEChunk(BaseModel):
     type: Literal["chunk", "done", "error"]
     content: str = ""
     session_id: str = ""
+    chat_id: int | None = None
+
+
+class ChatSummaryResponse(BaseModel):
+    id: int
+    title: str
+    created_at: datetime
 
 
 class ChatMessageResponse(BaseModel):

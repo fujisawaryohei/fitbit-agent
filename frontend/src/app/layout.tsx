@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import Link from "next/link";
 import FitbitStatus from "@/components/FitbitStatus";
+import ChatHistory from "@/components/ChatHistory";
 import Eruda from "@/components/Eruda";
 
 const geist = Geist({ subsets: ["latin"] });
@@ -35,7 +36,12 @@ export default function RootLayout({
           </Link>
           <FitbitStatus />
         </header>
-        <main className="flex-1 overflow-hidden">{children}</main>
+        <main className="flex-1 overflow-hidden flex">
+          <aside className="w-64 shrink-0 border-r border-gray-200 bg-white overflow-y-auto">
+            <ChatHistory />
+          </aside>
+          <div className="flex-1 overflow-hidden">{children}</div>
+        </main>
         {/* デバッグ用 Eruda コンソール（不要になったら削除） */}
         <Eruda />
       </body>

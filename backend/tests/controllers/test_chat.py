@@ -162,6 +162,70 @@ class TestChatStreaming:
         assert inserted_chat.title == "今日の歩数は？"
 
 
+class TestGetChats:
+    def _make_chats(self):
+        from datetime import datetime
+
+        from backend.models.chat import Chat
+
+        return [
+            Chat(
+                id=1,
+                user_id=1,
+                title="今日の歩数は？",
+                created_at=datetime(2026, 5, 29, 10, 0, 0),
+            ),
+            Chat(
+                id=2,
+                user_id=1,
+                title="睡眠時間は？",
+                created_at=datetime(2026, 5, 29, 11, 0, 0),
+            ),
+        ]
+
+    def test_no_cookie_returns_401(self):
+        client = TestClient(_app)
+        response = client.get("/chats")
+        assert response.status_code == 401
+        assert "認証が必要です" in response.json()["detail"]
+
+    def test_unknown_user_returns_401(self, container):
+        mock_user_repo = MagicMock()
+        mock_user_repo.find_by_fitbit_user_id.return_value = None
+
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(MagicMock()):
+            client = TestClient(_app)
+            client.cookies.set("fitbit_user_id", "unknown-user")
+            response = client.get("/chats")
+
+        assert response.status_code == 401
+        assert "ユーザーが見つかりません" in response.json()["detail"]
+
+    def test_returns_chat_summaries(self, container):
+        user = _make_mock_user()
+        mock_user_repo = MagicMock()
+        mock_user_repo.find_by_fitbit_user_id.return_value = user
+        mock_chat_repo = MagicMock()
+        mock_chat_repo.list.return_value = self._make_chats()
+
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(mock_chat_repo):
+            client = TestClient(_app)
+            client.cookies.set("fitbit_user_id", "ABC123")
+            response = client.get("/chats")
+
+        assert response.status_code == 200
+        body = response.json()
+        assert len(body) == 2
+        assert body[0]["id"] == 1
+        assert body[0]["title"] == "今日の歩数は？"
+        assert "created_at" in body[0]
+        assert body[1]["id"] == 2
+        assert body[1]["title"] == "睡眠時間は？"
+        mock_chat_repo.list.assert_called_once_with(user.id)
+
+
 class TestGetMessages:
     def _make_chat(self, chat_id=42, user_id=1):
         from backend.models.chat import Chat

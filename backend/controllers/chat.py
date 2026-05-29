@@ -16,7 +16,12 @@ from backend.models.message_role import MessageRole
 from backend.repositories.chat_repository import ChatRepository
 from backend.repositories.message_repository import MessageRepository
 from backend.repositories.user_repository import UserRepository
-from backend.schemas.chat import ChatMessageResponse, ChatRequest, SSEChunk
+from backend.schemas.chat import (
+    ChatMessageResponse,
+    ChatRequest,
+    ChatSummaryResponse,
+    SSEChunk,
+)
 
 router = APIRouter()
 _agent = get_agent()
@@ -70,6 +75,32 @@ def chat(
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
+
+
+@router.get("/chats")
+@inject
+def list_chats(
+    fitbit_user_id: str | None = Cookie(default=None),
+    user_repo: UserRepository = Depends(Provide[Container.user_repo]),
+    chat_repo: ChatRepository = Depends(Provide[Container.chat_repo]),
+) -> list[ChatSummaryResponse]:
+    if fitbit_user_id is None:
+        raise HTTPException(
+            status_code=401, detail="認証が必要です。先に /auth/fitbit で認証してください。"
+        )
+
+    user = user_repo.find_by_fitbit_user_id(fitbit_user_id)
+
+    if user is None:
+        raise HTTPException(
+            status_code=401, detail="ユーザーが見つかりません。再認証してください。"
+        )
+
+    chats = chat_repo.list(user.id)
+    return [
+        ChatSummaryResponse(id=chat.id, title=chat.title, created_at=chat.created_at)
+        for chat in chats
+    ]
 
 
 @router.get("/chats/{chat_id}/messages")
@@ -149,7 +180,7 @@ async def _sse_generator(
                 Message(chat_id=chat_id, role=MessageRole.ASSISTANT, content=assistant_content)
             )
 
-        yield f"data: {SSEChunk(type='done', session_id=str(user_id)).model_dump_json()}\n\n"
+        yield f"data: {SSEChunk(type='done', session_id=str(user_id), chat_id=chat_id).model_dump_json()}\n\n"
     except Exception as e:
         yield f"data: {SSEChunk(type='error', content=repr(e), session_id=str(user_id)).model_dump_json()}\n\n"
     finally:

@@ -2,6 +2,13 @@ export type SSEChunk = {
   type: "chunk" | "done" | "error";
   content: string;
   session_id: string;
+  chat_id?: number;
+};
+
+export type Chat = {
+  id: number;
+  title: string;
+  created_at: string;
 };
 
 export type Message = {

@@ -46,7 +46,7 @@ export default function Chat({ initialMessages = [] }: { initialMessages?: Messa
             return updated;
           });
         },
-        () => setStreaming(false),
+        (_chatId?: number) => setStreaming(false),
         (error) => {
           setMessages((prev) => {
             const updated = [...prev];

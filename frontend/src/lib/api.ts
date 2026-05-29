@@ -1,6 +1,16 @@
-import type { ChatMessage, SSEChunk } from "@/types/chat";
+import type { Chat, ChatMessage, SSEChunk } from "@/types/chat";
 
 export const BACKEND_URL = "/api";
+
+export async function fetchChats(): Promise<Chat[]> {
+  const response = await fetch(`${BACKEND_URL}/chats`, {
+    credentials: "include",
+  });
+  if (!response.ok) {
+    throw new Error(`チャット一覧の取得に失敗しました (${response.status})`);
+  }
+  return response.json();
+}
 
 export async function fetchMessages(chatId: number): Promise<ChatMessage[]> {
   const response = await fetch(`${BACKEND_URL}/chats/${chatId}/messages`, {
@@ -15,7 +25,7 @@ export async function fetchMessages(chatId: number): Promise<ChatMessage[]> {
 export async function streamChat(
   message: string,
   onChunk: (chunk: SSEChunk) => void,
-  onDone: () => void,
+  onDone: (chatId?: number) => void,
   onError: (error: string) => void
 ): Promise<void> {
   let response: Response;
@@ -63,7 +73,7 @@ export async function streamChat(
         try {
           const chunk: SSEChunk = JSON.parse(line.slice(6));
           if (chunk.type === "chunk") onChunk(chunk);
-          else if (chunk.type === "done") onDone();
+          else if (chunk.type === "done") onDone(chunk.chat_id);
           else if (chunk.type === "error") onError(chunk.content);
         } catch {
           // パース失敗は無視
