@@ -1,11 +1,13 @@
+import psycopg2.extensions
+
 from backend.models.chat import Chat
 
 
 class ChatRepository:
-    def __init__(self, conn):
+    def __init__(self, conn: psycopg2.extensions.connection) -> None:
         self.conn = conn
 
-    def list(self, user_id: int) -> list[Chat]:
+    def get_all(self, user_id: int) -> list[Chat]:
         with self.conn.cursor() as cur:
             cur.execute(
                 """
@@ -60,7 +62,8 @@ class ChatRepository:
             )
             row = cur.fetchone()
         self.conn.commit()
-        return row[0]
+        assert row is not None
+        return int(row[0])
 
     def delete_by_id(self, id: int) -> None:
         with self.conn.cursor() as cur:

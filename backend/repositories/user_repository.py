@@ -1,10 +1,12 @@
 from datetime import datetime
 
+import psycopg2.extensions
+
 from backend.models.user import User
 
 
 class UserRepository:
-    def __init__(self, conn):
+    def __init__(self, conn: psycopg2.extensions.connection) -> None:
         self.conn = conn
 
     def find_by_fitbit_user_id(self, fitbit_user_id: str) -> User | None:

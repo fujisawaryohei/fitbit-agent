@@ -8,7 +8,6 @@ container = Container()
 container.wire(modules=["backend.controllers.auth", "backend.controllers.chat"])
 
 app = FastAPI(title="Fitbit Agent API", version="1.0")
-app.container = container
 
 _cors_origins = ["http://localhost:3000"]
 if _extra := __import__("os").getenv("CORS_ORIGINS"):

@@ -69,7 +69,7 @@ def agent_node(state: AgentState) -> dict[str, list[AnyMessage]]:
         - 「目標カロリー赤字を計算して」
         - 「運動プランを作成して」
     """).strip()
-    injected = [m.content for m in state.messages if isinstance(m, SystemMessage)]
+    injected = [_extract_text(m.content) for m in state.messages if isinstance(m, SystemMessage)]
     conversation = [m for m in state.messages if not isinstance(m, SystemMessage)]
     full_prompt = "\n\n".join([system_prompt] + injected)
     messages: list[AnyMessage] = [SystemMessage(content=full_prompt)] + conversation

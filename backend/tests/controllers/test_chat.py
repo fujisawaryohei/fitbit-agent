@@ -207,7 +207,7 @@ class TestGetChats:
         mock_user_repo = MagicMock()
         mock_user_repo.find_by_fitbit_user_id.return_value = user
         mock_chat_repo = MagicMock()
-        mock_chat_repo.list.return_value = self._make_chats()
+        mock_chat_repo.get_all.return_value = self._make_chats()
 
         with container.user_repo.override(mock_user_repo), \
              container.chat_repo.override(mock_chat_repo):
@@ -223,7 +223,7 @@ class TestGetChats:
         assert "created_at" in body[0]
         assert body[1]["id"] == 2
         assert body[1]["title"] == "睡眠時間は？"
-        mock_chat_repo.list.assert_called_once_with(user.id)
+        mock_chat_repo.get_all.assert_called_once_with(user.id)
 
 
 class TestGetMessages:
@@ -268,7 +268,7 @@ class TestGetMessages:
         mock_chat_repo = MagicMock()
         mock_chat_repo.find_by_id.return_value = self._make_chat()
         mock_msg_repo = MagicMock()
-        mock_msg_repo.list.return_value = self._make_messages()
+        mock_msg_repo.get_all.return_value = self._make_messages()
 
         with container.user_repo.override(mock_user_repo), \
              container.chat_repo.override(mock_chat_repo), \
@@ -284,7 +284,7 @@ class TestGetMessages:
         assert body[0]["content"] == "今日の歩数は？"
         assert body[1]["role"] == "assistant"
         assert body[1]["content"] == "8000歩です。"
-        mock_msg_repo.list.assert_called_once_with(42)
+        mock_msg_repo.get_all.assert_called_once_with(42)
 
     def test_unknown_user_returns_401(self, container):
         mock_user_repo = MagicMock()
@@ -317,7 +317,7 @@ class TestGetMessages:
 
         assert response.status_code == 404
         assert "チャットが見つかりません" in response.json()["detail"]
-        mock_msg_repo.list.assert_not_called()
+        mock_msg_repo.get_all.assert_not_called()
 
     def test_missing_chat_returns_404(self, container):
         user = _make_mock_user()
@@ -335,4 +335,4 @@ class TestGetMessages:
             response = client.get("/chats/42/messages")
 
         assert response.status_code == 404
-        mock_msg_repo.list.assert_not_called()
+        mock_msg_repo.get_all.assert_not_called()

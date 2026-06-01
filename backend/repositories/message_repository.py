@@ -1,12 +1,14 @@
+import psycopg2.extensions
+
 from backend.models.message import Message
 from backend.models.message_role import MessageRole
 
 
 class MessageRepository:
-    def __init__(self, conn) -> None:
+    def __init__(self, conn: psycopg2.extensions.connection) -> None:
         self.conn = conn
 
-    def list(self, chat_id: int) -> list[Message]:
+    def get_all(self, chat_id: int) -> list[Message]:
         with self.conn.cursor() as cur:
             cur.execute(
                 """

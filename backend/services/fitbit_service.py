@@ -35,6 +35,9 @@ class FitbitService:
 
         del self._state_store[state]
 
+        if code is None:
+            raise InvalidStateError("codeが指定されていません")
+
         token_response = self._client.exchange_code_for_token(code)
         user = User(
             fitbit_user_id=token_response.user_id,

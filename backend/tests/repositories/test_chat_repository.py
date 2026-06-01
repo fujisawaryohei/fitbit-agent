@@ -19,7 +19,7 @@ class TestList:
     def test_list_executes_correct_sql(self):
         conn, cursor = make_mock_conn()
         cursor.fetchall.return_value = []
-        ChatRepository(conn).list(user_id=1)
+        ChatRepository(conn).get_all(user_id=1)
         expected_sql = """
                 SELECT id, user_id, title, created_at, updated_at
                 FROM chats
@@ -33,7 +33,7 @@ class TestList:
             (1, 1, "チャット1", CREATED_AT, CREATED_AT),
             (2, 1, "チャット2", CREATED_AT, CREATED_AT),
         ]
-        result = ChatRepository(conn).list(user_id=1)
+        result = ChatRepository(conn).get_all(user_id=1)
         assert len(result) == 2
         assert result[0].id == 1
         assert result[0].title == "チャット1"
@@ -42,7 +42,7 @@ class TestList:
     def test_returns_empty_list_when_no_chats(self):
         conn, cursor = make_mock_conn()
         cursor.fetchall.return_value = []
-        result = ChatRepository(conn).list(user_id=1)
+        result = ChatRepository(conn).get_all(user_id=1)
         assert result == []
 
 

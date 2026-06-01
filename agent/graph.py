@@ -1,3 +1,5 @@
+from typing import Any
+
 from langgraph.checkpoint.memory import MemorySaver
 from langgraph.graph import END, START, StateGraph
 
@@ -32,5 +34,5 @@ _builder.add_edge("memory_save_node", END)
 agent = _builder.compile(checkpointer=MemorySaver())
 
 
-def get_agent():
+def get_agent() -> Any:
     return agent

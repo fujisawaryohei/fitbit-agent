@@ -1,5 +1,7 @@
 import os
+from collections.abc import AsyncGenerator
 
+import psycopg2.extensions
 from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Cookie, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -52,6 +54,7 @@ def chat(
             status_code=401, detail="アクセストークンの有効期限が切れています。再認証してください。"
         )
 
+    assert user.id is not None
     chat_id = chat_repo.insert(Chat(user_id=user.id, title=request.message[:50]))
 
     fitbit_client = FitbitClient(
@@ -96,9 +99,14 @@ def list_chats(
             status_code=401, detail="ユーザーが見つかりません。再認証してください。"
         )
 
-    chats = chat_repo.list(user.id)
+    assert user.id is not None
+    chats = chat_repo.get_all(user.id)
     return [
-        ChatSummaryResponse(id=chat.id, title=chat.title, created_at=chat.created_at)
+        ChatSummaryResponse(
+            id=chat.id,  # type: ignore[arg-type]
+            title=chat.title,
+            created_at=chat.created_at,  # type: ignore[arg-type]
+        )
         for chat in chats
     ]
 
@@ -129,14 +137,14 @@ def list_messages(
     if chat is None or chat.user_id != user.id:
         raise HTTPException(status_code=404, detail="チャットが見つかりません。")
 
-    messages = message_repo.list(chat_id)
+    messages = message_repo.get_all(chat_id)
     return [
         ChatMessageResponse(
-            id=message.id,
+            id=message.id,  # type: ignore[arg-type]
             chat_id=message.chat_id,
             role=str(message.role),
             content=message.content,
-            created_at=message.created_at,
+            created_at=message.created_at,  # type: ignore[arg-type]
         )
         for message in messages
     ]
@@ -146,9 +154,9 @@ async def _sse_generator(
     message: str,
     user_id: int,
     chat_id: int,
-    conn,
+    conn: psycopg2.extensions.connection,
     fitbit_client: FitbitClient,
-):
+) -> AsyncGenerator[str, None]:
     set_fitbit_client(fitbit_client)
     config = {"configurable": {"thread_id": str(chat_id)}}
     message_repo = MessageRepository(conn)

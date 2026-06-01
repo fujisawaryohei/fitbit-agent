@@ -20,7 +20,7 @@ class TestList:
     def test_list_executes_correct_sql(self):
         conn, cursor = make_mock_conn()
         cursor.fetchall.return_value = []
-        MessageRepository(conn).list(chat_id=1)
+        MessageRepository(conn).get_all(chat_id=1)
         expected_sql = """
                 SELECT id, chat_id, role, content, created_at
                 FROM messages
@@ -35,7 +35,7 @@ class TestList:
             (1, 1, "user", "今日の歩数は？", CREATED_AT),
             (2, 1, "assistant", "8000歩です。", CREATED_AT),
         ]
-        result = MessageRepository(conn).list(chat_id=1)
+        result = MessageRepository(conn).get_all(chat_id=1)
         assert len(result) == 2
         assert result[0].role == MessageRole.USER
         assert result[0].content == "今日の歩数は？"
@@ -45,7 +45,7 @@ class TestList:
     def test_returns_empty_list_when_no_messages(self):
         conn, cursor = make_mock_conn()
         cursor.fetchall.return_value = []
-        result = MessageRepository(conn).list(chat_id=1)
+        result = MessageRepository(conn).get_all(chat_id=1)
         assert result == []
 
 

@@ -1,5 +1,7 @@
 import os
+from collections.abc import Generator
 
+import psycopg2.extensions
 from dependency_injector import containers, providers
 
 from agent.fitbit.client import FitbitClient
@@ -10,7 +12,7 @@ from backend.repositories.user_repository import UserRepository
 from backend.services.fitbit_service import FitbitService
 
 
-def _create_conn():
+def _create_conn() -> Generator[psycopg2.extensions.connection, None, None]:
     conn = get_connection()
     try:
         yield conn
