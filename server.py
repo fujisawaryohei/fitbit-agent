@@ -2,7 +2,10 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from backend.containers import Container
+from backend.decorators.masked_credentials import setup_access_log_masking
 from backend.router import router
+
+setup_access_log_masking()
 
 container = Container()
 container.wire(modules=["backend.controllers.auth", "backend.controllers.chat"])

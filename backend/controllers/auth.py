@@ -6,6 +6,7 @@ from fastapi.exceptions import HTTPException
 from fastapi.responses import RedirectResponse
 
 from backend.containers import Container
+from backend.decorators.masked_credentials import masked_credentials
 from backend.services.fitbit_service import FitbitService, InvalidStateError, StateExpiredError
 
 _FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
@@ -26,6 +27,7 @@ def authorization_url(
 
 @router.get("/auth/fitbit/callback")
 @inject
+@masked_credentials("code", "state")
 def callback(
     code: str | None = None,
     state: str | None = None,
