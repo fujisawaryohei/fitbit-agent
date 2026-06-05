@@ -10,15 +10,19 @@ Fitbit APIから取得した健康データをもとに、カスタム ReAct エ
 
 | レイヤー | 技術 |
 |---------|------|
-| フロントエンド | Next.js 14+ / TypeScript |
+| フロントエンド | Next.js / TypeScript |
 | バックエンド API | FastAPI (Python) |
 | AI エージェント | LangGraph カスタムグラフ（ReAct手動実装） |
-| LLM | Claude (Anthropic) — `claude-sonnet-4-6` |
+| LLM | Claude Haiku (Amazon Bedrock) — `jp.anthropic.claude-haiku-4-5-20251001-v1:0` |
+| Embeddings | Amazon Titan Embed Text v2 (Bedrock) |
 | Short-term memory | LangGraph MemorySaver（in-context） |
 | Long-term memory | PostgreSQL + pgvector（セマンティックメモリ） |
 | ストリーミング | SSE（Server-Sent Events） |
 | Fitbit 認証 | OAuth2 Authorization Code Flow |
 | Fitbit クライアント | FitbitClient クラス（Python） |
+| DI | dependency-injector（DIコンテナ） |
+| 型チェック | mypy |
+| Lint / Format | ruff |
 | DB（ローカル） | Docker Compose（pgvector/pgvector:pg16） |
 
 ---
@@ -92,34 +96,66 @@ ChatUI → FastAPIApp → LangGraphAgent → ToolRegistry → FitbitClient → F
 
 ---
 
-## ディレクトリ構成（想定）
+## ディレクトリ構成（実装済み）
 
 ```
 fitbit-agent/
-├── frontend/                   # Next.js + TypeScript
-│   ├── app/
-│   │   └── page.tsx            # チャット画面
-│   └── components/
-│       └── Chat.tsx
+├── server.py                          # FastAPI アプリ起動エントリポイント
+├── pyproject.toml                     # 依存管理・mypy/ruff 設定
+├── .env / .env.sample                 # 環境変数
 │
-├── backend/                    # FastAPI + LangGraph
-│   ├── main.py                 # FastAPI アプリ起動
-│   ├── api/
-│   │   ├── chat.py             # POST /chat (SSE)
-│   │   └── auth.py             # GET /auth/fitbit*
-│   ├── agent/
-│   │   ├── graph.py            # LangGraph カスタムグラフ定義
-│   │   ├── nodes.py            # グラフノード関数
-│   │   └── state.py            # AgentState 定義
-│   ├── tools/
-│   │   ├── fitbit_tools.py     # Fitbit @tool 定義
-│   │   └── planning_tools.py   # プランニング @tool 定義
-│   ├── fitbit/
-│   │   └── client.py           # FitbitClient クラス
+├── frontend/                          # Next.js + TypeScript
+│   ├── next.config.ts                 # リライト設定（BACKEND_URL 等の環境変数参照）
+│   ├── .env / .env.sample             # フロントエンド専用環境変数
+│   └── src/
+│       ├── app/
+│       │   ├── page.tsx               # チャット画面
+│       │   ├── chat/[chat_id]/page.tsx
+│       │   └── api/chat/route.ts      # SSE プロキシ（Route Handler）
+│       ├── components/
+│       │   ├── Chat.tsx
+│       │   ├── ChatHistory.tsx
+│       │   ├── FitbitStatus.tsx
+│       │   └── ...
+│       └── lib/api.ts
+│
+├── backend/                           # FastAPI バックエンド
+│   ├── containers.py                  # DIコンテナ（dependency-injector）
+│   ├── router.py                      # ルーター集約
+│   ├── controllers/
+│   │   ├── auth.py                    # GET /auth/fitbit*
+│   │   └── chat.py                    # POST /chat, GET /chats, GET /chats/{id}/messages
+│   ├── decorators/
+│   │   └── masked_credentials.py      # ログマスクデコレーター
+│   ├── services/
+│   │   └── fitbit_service.py
+│   ├── repositories/
+│   │   ├── user_repository.py
+│   │   ├── chat_repository.py
+│   │   └── message_repository.py
+│   ├── models/
+│   │   ├── user.py
+│   │   ├── chat.py
+│   │   ├── message.py
+│   │   └── ...
+│   ├── schemas/
+│   │   └── chat.py                    # ChatRequest, SSEChunk, ChatSummaryResponse 等
+│   ├── config/
+│   │   └── connection_pool.py
+│   └── migrations/                    # Alembic
+│
+├── agent/                             # LangGraph エージェント
+│   ├── graph.py
+│   ├── nodes.py
+│   ├── state.py
+│   ├── context.py
+│   ├── fitbit/client.py
 │   ├── memory/
-│   │   └── manager.py          # MemoryManager クラス
-│   └── services/
-│       └── fitbit_service.py   # FitbitService
+│   │   ├── manager.py
+│   │   └── embedding.py
+│   └── tools/
+│       ├── fitbit_tools.py
+│       └── planning_tools.py
 │
-└── docker-compose.yml          # PostgreSQL + pgvector
+└── docker-compose.yml
 ```

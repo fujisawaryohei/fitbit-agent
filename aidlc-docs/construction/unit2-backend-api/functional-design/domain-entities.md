@@ -20,30 +20,21 @@
 POST /chat のリクエストボディ。
 
 ```python
-from pydantic import BaseModel, field_validator
-
 class ChatRequest(BaseModel):
     message: str
-    session_id: str
 
     @field_validator("message")
     @classmethod
     def validate_message(cls, v: str) -> str:
         v = v.strip()
         if not v:
-            raise ValueError("message は空文字列にできません")
+            raise ValueError("messageを空文字列にすることはできません")
         if len(v) > 2000:
-            raise ValueError("message は2000文字以内にしてください")
-        return v
-
-    @field_validator("session_id")
-    @classmethod
-    def validate_session_id(cls, v: str) -> str:
-        v = v.strip()
-        if not v:
-            raise ValueError("session_id は空文字列にできません")
+            raise ValueError("messageは2000文字以内で入力してください")
         return v
 ```
+
+> ※ `session_id` は設計当初含まれていたが実装では削除。session_id は `user.id` をサーバー側で管理する。
 
 ---
 
@@ -52,25 +43,38 @@ class ChatRequest(BaseModel):
 SSEストリーミングの1チャンク単位。`data: {json}\n\n` 形式で送信する。
 
 ```python
-from pydantic import BaseModel
-from typing import Literal
-
 class SSEChunk(BaseModel):
     type: Literal["chunk", "done", "error"]
     content: str = ""
     session_id: str = ""
+    chat_id: int | None = None    # type="done" 時にフロントへ chat_id を通知
 ```
 
 **送信フォーマット**:
 ```
-data: {"type": "chunk", "content": "こんにちは", "session_id": "abc123"}\n\n
-data: {"type": "chunk", "content": "！今日の", "session_id": "abc123"}\n\n
-data: {"type": "done", "content": "", "session_id": "abc123"}\n\n
+data: {"type": "chunk", "content": "こんにちは", "session_id": "1"}\n\n
+data: {"type": "done", "content": "", "session_id": "1", "chat_id": 42}\n\n
+data: {"type": "error", "content": "...", "session_id": "1"}\n\n
 ```
 
-**エラー時**:
-```
-data: {"type": "error", "content": "エージェントでエラーが発生しました", "session_id": "abc123"}\n\n
+---
+
+## ChatSummaryResponse / ChatMessageResponse
+
+会話履歴 API のレスポンス。
+
+```python
+class ChatSummaryResponse(BaseModel):
+    id: int
+    title: str
+    created_at: datetime
+
+class ChatMessageResponse(BaseModel):
+    id: int
+    chat_id: int
+    role: str
+    content: str
+    created_at: datetime
 ```
 
 ---
@@ -146,19 +150,70 @@ class AuthCallbackResponse(BaseModel):
 Fitbit ユーザーの認証情報を保持するドメインエンティティ。PostgreSQL の `users` テーブルに永続化する。
 
 ```python
-from dataclasses import dataclass, field
-from datetime import datetime
-
-@dataclass
 class User:
-    fitbit_user_id: str
-    access_token: str
-    refresh_token: str
-    token_expires_at: datetime
-    scope: str
-    id: int | None = None
-    created_at: datetime | None = None
-    updated_at: datetime | None = None
+    def __init__(
+        self,
+        fitbit_user_id: str,
+        access_token: str,
+        refresh_token: str,
+        token_expires_at: datetime,
+        scope: str,
+        id: int | None = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+    ) -> None: ...
+
+    def is_token_expired(self, buffer_minutes: int = 5) -> bool:
+        """バッファ付きでトークン有効期限を確認する。"""
+```
+
+> ※ dataclass ではなく通常クラスで実装。`id` は DB 挿入前は `None`、挿入後は `int`。
+
+---
+
+## Chat / Message
+
+会話履歴を保持するドメインエンティティ。
+
+```python
+class Chat:
+    def __init__(
+        self,
+        user_id: int,
+        title: str,
+        id: int | None = None,
+        created_at: datetime | None = None,
+        updated_at: datetime | None = None,
+    ) -> None: ...
+
+class Message:
+    def __init__(
+        self,
+        chat_id: int,
+        role: MessageRole,
+        content: str,
+        id: int | None = None,
+        created_at: datetime | None = None,
+    ) -> None: ...
+```
+
+**DB スキーマ**:
+```sql
+CREATE TABLE chats (
+    id         SERIAL PRIMARY KEY,
+    user_id    INTEGER NOT NULL REFERENCES users(id),
+    title      TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE messages (
+    id         SERIAL PRIMARY KEY,
+    chat_id    INTEGER NOT NULL REFERENCES chats(id),
+    role       VARCHAR(20) NOT NULL,  -- 'user' | 'assistant'
+    content    TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 ```
 
 **DB スキーマ**:
