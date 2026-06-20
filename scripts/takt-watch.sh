@@ -34,6 +34,34 @@ fi
 
 err() { printf '%s\n' "$*" >&2; }
 
+# Python インタプリタ解決。asdf 等の shim が python3 を横取りして
+# "No preset version installed" で失敗する環境があるため、実際に起動できる
+# 候補を順に試し、最初に動いたものを使う。
+PY=""
+resolve_python() {
+  [[ -n "$PY" ]] && return 0
+  local cand
+  for cand in python3 python /usr/bin/python3 /usr/local/bin/python3 /usr/bin/python /opt/homebrew/bin/python3; do
+    if command -v "$cand" >/dev/null 2>&1 && "$cand" -c '' >/dev/null 2>&1; then
+      PY="$cand"
+      return 0
+    fi
+  done
+  err "動作する Python が見つかりません (python3 / python を探索)。"
+  err "asdf を使っている場合は 'asdf install python <version>' で導入するか、"
+  err "TAKT_WATCH_PYTHON=/usr/bin/python3 のように実体パスを指定してください。"
+  exit 1
+}
+# 明示指定があれば最優先で採用する。
+if [[ -n "${TAKT_WATCH_PYTHON:-}" ]]; then
+  if "${TAKT_WATCH_PYTHON}" -c '' >/dev/null 2>&1; then
+    PY="${TAKT_WATCH_PYTHON}"
+  else
+    err "TAKT_WATCH_PYTHON が起動できません: ${TAKT_WATCH_PYTHON}"
+    exit 1
+  fi
+fi
+
 usage() {
   sed -n '2,19p' "$0" | sed 's/^# \{0,1\}//'
   exit "${1:-0}"
@@ -41,20 +69,22 @@ usage() {
 
 # --- run ディレクトリ解決 ---------------------------------------------------
 list_runs() {
+  resolve_python
   if [[ ! -d "$RUNS_DIR" ]]; then
     err "run ディレクトリが見つかりません: $RUNS_DIR"
     exit 1
   fi
-  local d meta status step iter wf
+  local d meta fields status step iter wf
   printf '%s%-38s %-9s %-16s %s%s\n' "$C_BOLD" "RUN" "STATUS" "STEP" "WORKFLOW" "$C_RESET"
   while IFS= read -r d; do
     meta="$d/meta.json"
     status="-"; step="-"; iter="-"; wf="-"
     if [[ -f "$meta" ]]; then
-      status=$(python3 -c "import json,sys;d=json.load(open('$meta'));print(d.get('status','-'))" 2>/dev/null || echo "-")
-      step=$(python3 -c "import json,sys;d=json.load(open('$meta'));print(d.get('currentStep','-'))" 2>/dev/null || echo "-")
-      iter=$(python3 -c "import json,sys;d=json.load(open('$meta'));print(d.get('currentIteration','-'))" 2>/dev/null || echo "-")
-      wf=$(python3 -c "import json,sys;d=json.load(open('$meta'));print(d.get('workflow','-'))" 2>/dev/null || echo "-")
+      # 1 ファイルにつき 1 回の Python 呼び出しで 4 値をタブ区切り取得する。
+      fields=$("$PY" -c "import json,sys
+d=json.load(open(sys.argv[1]))
+print('\t'.join(str(d.get(k,'-')) for k in ('status','currentStep','currentIteration','workflow')))" "$meta" 2>/dev/null || printf '%s' $'-\t-\t-\t-')
+      IFS=$'\t' read -r status step iter wf <<<"$fields"
     fi
     printf '%-38s %-9s %-16s %s\n' "$(basename "$d")" "$status" "$step (i$iter)" "$wf"
   done < <(ls -dt "$RUNS_DIR"/*/ 2>/dev/null)
@@ -76,12 +106,13 @@ resolve_run() {
 }
 
 print_header() {
+  resolve_python
   local run="$1"
   local meta="$run/meta.json"
   printf '%s%s═══ TAKT watch ═══════════════════════════════════════════%s\n' "$C_BOLD" "$C_CYAN" "$C_RESET"
   printf '%srun     %s%s\n' "$C_DIM" "$C_RESET" "$(basename "$run")"
   if [[ -f "$meta" ]]; then
-    python3 - "$meta" <<'PY'
+    "$PY" - "$meta" <<'PY'
 import json, sys
 d = json.load(open(sys.argv[1]))
 def row(k, v): print(f"\033[2m{k:<8}\033[0m{v}")
@@ -97,9 +128,10 @@ PY
 
 # JSONL 1 行を整形 (stdin -> stdout)。色は環境変数で受け渡す。
 format_stream() {
+  resolve_python
   C_RESET="$C_RESET" C_DIM="$C_DIM" C_BOLD="$C_BOLD" C_BLUE="$C_BLUE" \
   C_GREEN="$C_GREEN" C_YELLOW="$C_YELLOW" C_RED="$C_RED" C_CYAN="$C_CYAN" \
-  C_MAGENTA="$C_MAGENTA" python3 -u -c '
+  C_MAGENTA="$C_MAGENTA" "$PY" -u -c '
 import sys, os, json
 
 R=os.environ; RESET=R["C_RESET"]; DIM=R["C_DIM"]; BOLD=R["C_BOLD"]
