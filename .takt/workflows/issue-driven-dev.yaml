@@ -1,0 +1,219 @@
+name: issue-driven-dev
+description: |
+  GitHub Issue 起点の開発ワークフロー。
+  Claude が計画を立て Codex がレビュー、決定事項を Issue に記録した後、
+  Codex が実装し Claude がレビュー、最後に Codex が PR を作成する。
+max_steps: 25
+initial_step: plan
+interactive_mode: persona      # 対話モードで先頭ステップ(plan)の planner ペルソナを対話相手にする
+
+# ----------------------------------------------------------------------------
+# Faceted Prompting: 各 facet は .takt/facets/ 配下のファイルを key で参照する。
+# パスはこの YAML のあるディレクトリ（.takt/workflows/）からの相対。
+# ----------------------------------------------------------------------------
+personas:
+  planner: ../facets/personas/planner.md
+  reviewer: ../facets/personas/reviewer.md
+  coder: ../facets/personas/coder.md
+  github-operator: ../facets/personas/github-operator.md
+  mentor: ../facets/personas/mentor.md
+
+policies:
+  planning: ../facets/policies/planning.md
+  review: ../facets/policies/review.md
+  coding: ../facets/policies/coding.md
+  git-hygiene: ../facets/policies/git-hygiene.md
+
+knowledge:
+  project-overview: ../facets/knowledge/project-overview.md
+  github-workflow: ../facets/knowledge/github-workflow.md
+
+instructions:
+  fetch-and-plan: ../facets/instructions/fetch-and-plan.md
+  review-plan: ../facets/instructions/review-plan.md
+  record-decision: ../facets/instructions/record-decision.md
+  learning-guide: ../facets/instructions/learning-guide.md
+  implement: ../facets/instructions/implement.md
+  review-implementation: ../facets/instructions/review-implementation.md
+  create-pr: ../facets/instructions/create-pr.md
+
+report_formats:
+  plan: ../facets/output-contracts/plan.md
+  review: ../facets/output-contracts/review.md
+  decision-record: ../facets/output-contracts/decision-record.md
+  learning-guide: ../facets/output-contracts/learning-guide.md
+  pr: ../facets/output-contracts/pr.md
+
+# ----------------------------------------------------------------------------
+# 差し戻しループの上限制御（plan↔plan-review、implement↔impl-review を各3回まで）
+# ----------------------------------------------------------------------------
+loop_monitors:
+  - cycle: [plan, plan-review]
+    threshold: 3
+    judge:
+      persona: reviewer
+      instruction: |
+        plan → plan-review のサイクルが3回繰り返されました。
+        現在の計画で合意して次へ進めるか、合意に至らないため中断するかを判断してください。
+      rules:
+        - condition: Proceed with current plan
+          next: record-decision
+        - condition: No progress, abort
+          next: ABORT
+
+  - cycle: [implement, impl-review]
+    threshold: 3
+    judge:
+      persona: reviewer
+      instruction: |
+        implement → impl-review のサイクルが3回繰り返されました。
+        現在の実装で合意して PR 作成へ進めるか、合意に至らないため中断するかを判断してください。
+      rules:
+        - condition: Proceed to PR
+          next: create-pr
+        - condition: No progress, abort
+          next: ABORT
+
+steps:
+  # 1+2. チケット番号を受け取り、Issue を取得して実装プランを策定（Claude）
+  - name: plan
+    persona: planner
+    policy: [planning]
+    knowledge: [project-overview, github-workflow]
+    instruction: fetch-and-plan
+    provider: claude-sdk
+    model: sonnet
+    edit: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash, WebSearch, WebFetch]
+    output_contracts:
+      report:
+        - name: 00-plan.md
+          format: plan
+    rules:
+      - condition: Planning complete
+        next: plan-review
+      - condition: Issue not found or cannot proceed
+        next: ABORT
+
+  # 3. 実装プランをレビュー（Codex）。差し戻しは plan へ戻る
+  - name: plan-review
+    persona: reviewer
+    policy: [review]
+    knowledge: [project-overview]
+    instruction: review-plan
+    provider: codex
+    edit: false
+    output_contracts:
+      report:
+        - name: 01-plan-review.md
+          format: review
+    rules:
+      - condition: Approved
+        next: record-decision
+      - condition: Needs revision
+        next: plan
+
+  # 4. 決定事項を GitHub Issue に記録（Claude）
+  - name: record-decision
+    persona: github-operator
+    policy: [git-hygiene]
+    knowledge: [github-workflow]
+    instruction: record-decision
+    provider: claude-sdk
+    model: sonnet
+    edit: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash]
+    output_contracts:
+      report:
+        - name: 02-decision-record.md
+          format: decision-record
+    rules:
+      - condition: Recorded to issue
+        next: learning-guide
+      - condition: Cannot proceed
+        next: ABORT
+
+  # 5. タスク完遂に必要な技術領域の自己学習ガイドを生成（Claude）
+  - name: learning-guide
+    persona: mentor
+    knowledge: [project-overview]
+    instruction: learning-guide
+    provider: claude-sdk
+    model: sonnet
+    edit: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash, WebSearch, WebFetch]
+    output_contracts:
+      report:
+        - name: 03-learning-guide.md
+          format: learning-guide
+    rules:
+      - condition: Learning guide complete
+        next: implement
+      - condition: Cannot proceed
+        next: ABORT
+
+  # 6. 実装（Codex）
+  - name: implement
+    persona: coder
+    policy: [coding]
+    knowledge: [project-overview]
+    instruction: implement
+    provider: codex
+    edit: true
+    required_permission_mode: edit
+    rules:
+      - condition: Implementation complete
+        next: impl-review
+      - condition: Cannot proceed
+        next: ABORT
+
+  # 7. 実装をレビュー（Claude）。差し戻しは implement へ戻る
+  - name: impl-review
+    persona: reviewer
+    policy: [review, coding]
+    knowledge: [project-overview]
+    instruction: review-implementation
+    provider: claude-sdk
+    model: sonnet
+    edit: false
+    provider_options:
+      claude:
+        allowed_tools: [Read, Glob, Grep, Bash]
+    output_contracts:
+      report:
+        - name: 04-impl-review.md
+          format: review
+    rules:
+      - condition: Approved
+        next: create-pr
+      - condition: Needs revision
+        next: implement
+
+  # 8. PR を作成（Codex）
+  - name: create-pr
+    persona: github-operator
+    policy: [git-hygiene]
+    knowledge: [github-workflow]
+    instruction: create-pr
+    provider: codex
+    edit: true
+    required_permission_mode: full
+    allow_git_commit: true
+    provider_options:
+      codex:
+        network_access: true
+    output_contracts:
+      report:
+        - name: 05-pr.md
+          format: pr
+    rules:
+      - condition: PR created
+        next: COMPLETE
+      - condition: Cannot proceed
+        next: ABORT
