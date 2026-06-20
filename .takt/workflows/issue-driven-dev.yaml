@@ -81,7 +81,7 @@ steps:
     policy: [planning]
     knowledge: [project-overview, github-workflow]
     instruction: fetch-and-plan
-    provider: claude-sdk
+    provider: claude
     model: sonnet
     edit: false
     provider_options:
@@ -121,7 +121,7 @@ steps:
     policy: [git-hygiene]
     knowledge: [github-workflow]
     instruction: record-decision
-    provider: claude-sdk
+    provider: claude
     model: sonnet
     edit: false
     provider_options:
@@ -142,7 +142,7 @@ steps:
     persona: mentor
     knowledge: [project-overview]
     instruction: learning-guide
-    provider: claude-sdk
+    provider: claude
     model: sonnet
     edit: false
     provider_options:
@@ -179,7 +179,7 @@ steps:
     policy: [review, coding]
     knowledge: [project-overview]
     instruction: review-implementation
-    provider: claude-sdk
+    provider: claude
     model: sonnet
     edit: false
     provider_options:
