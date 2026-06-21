@@ -1,0 +1,15 @@
+# コードレビュー用 composition
+name: code-review
+description: コードレビュー用。品質・セキュリティ・保守性を重大度別に指摘する。
+persona: code-reviewer
+policies:
+  - immutability
+  - error-handling
+  - input-validation
+  - code-quality
+  - security
+  - testing
+knowledge:
+  - design-patterns
+output-contracts:
+  - code-review

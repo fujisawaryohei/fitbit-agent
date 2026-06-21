@@ -1,0 +1,20 @@
+# バックエンド実装タスク用 composition
+name: coding-backend
+description: fitbit-agent のバックエンド(FastAPI/Python)実装タスク用。既存パターン踏襲・テスト駆動で実装する。
+persona: backend-dev
+policies:
+  - immutability
+  - file-organization
+  - error-handling
+  - input-validation
+  - code-quality
+  - testing
+  - no-commit-without-permission
+knowledge:
+  - project-backend
+  - design-patterns
+instructions:
+  - research-and-reuse
+  - feature-development
+output-contracts:
+  - pull-request

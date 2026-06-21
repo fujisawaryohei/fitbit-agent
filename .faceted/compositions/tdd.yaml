@@ -1,0 +1,14 @@
+# テスト駆動開発用 composition
+name: tdd
+description: テスト駆動開発用。RED→GREEN→REFACTOR を徹底しカバレッジ80%+を確保する。
+persona: tdd-guide
+policies:
+  - testing
+  - code-quality
+  - immutability
+knowledge:
+  - project-backend
+instructions:
+  - feature-development
+output-contracts:
+  - pull-request

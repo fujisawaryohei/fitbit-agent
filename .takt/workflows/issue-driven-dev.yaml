@@ -105,6 +105,10 @@ steps:
     instruction: review-plan
     provider: codex
     edit: false
+    required_permission_mode: edit  # bash(git diff 等)でコード事実確認に必要
+    provider_options:
+      codex:
+        network_access: false
     output_contracts:
       report:
         - name: 01-plan-review.md
@@ -167,6 +171,9 @@ steps:
     provider: codex
     edit: true
     required_permission_mode: edit
+    provider_options:
+      codex:
+        network_access: false
     rules:
       - condition: Implementation complete
         next: impl-review

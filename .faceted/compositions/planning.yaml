@@ -1,0 +1,13 @@
+# 実装プランニング用 composition
+name: planning
+description: 実装プランニング用。依存・リスクを洗い出しフェーズ分解した計画を作る。
+persona: planner
+policies:
+  - code-quality
+knowledge:
+  - design-patterns
+  - aidlc-workflow
+instructions:
+  - research-and-reuse
+output-contracts:
+  - plan

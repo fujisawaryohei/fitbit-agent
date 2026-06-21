@@ -1,0 +1,17 @@
+# フロントエンド実装タスク用 composition
+name: coding-frontend
+description: fitbit-agent のフロントエンド(Next.js 16/TypeScript)実装タスク用。Next.js 16 ドキュメント参照を必須とする。
+persona: frontend-dev
+policies:
+  - immutability
+  - file-organization
+  - code-quality
+  - no-commit-without-permission
+knowledge:
+  - project-frontend
+  - design-patterns
+instructions:
+  - research-and-reuse
+  - feature-development
+output-contracts:
+  - pull-request

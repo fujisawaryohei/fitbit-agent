@@ -1,0 +1,16 @@
+# Issue からチーム自動起動する composition（オーケストレーター視点）
+name: feature-team
+description: Issue番号/タスクリストからバックエンド・フロントエンドのエージェントチームを自動起動する。
+persona: planner
+policies:
+  - testing
+  - git-workflow
+  - no-commit-without-permission
+knowledge:
+  - project-backend
+  - project-frontend
+  - agents-catalog
+instructions:
+  - feature-team
+output-contracts:
+  - pull-request

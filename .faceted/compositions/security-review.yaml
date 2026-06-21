@@ -1,0 +1,10 @@
+# セキュリティレビュー用 composition
+name: security-review
+description: セキュリティレビュー用。シークレット混入・インジェクション・OWASP Top 10 を検出する。
+persona: security-reviewer
+policies:
+  - security
+  - input-validation
+  - error-handling
+output-contracts:
+  - code-review

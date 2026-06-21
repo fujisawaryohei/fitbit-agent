@@ -1,0 +1,11 @@
+# GitHub Issue 起票用 composition
+name: issue-create
+description: やりたいことから GitHub Issue を仕様策定・TODO化して起票し Project に追加する。
+persona: issue-planner
+knowledge:
+  - project-backend
+  - project-frontend
+instructions:
+  - issue-create
+output-contracts:
+  - issue
