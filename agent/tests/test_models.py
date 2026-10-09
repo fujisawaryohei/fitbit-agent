@@ -17,6 +17,11 @@ class TestWeightGoal:
         with pytest.raises(ValidationError):
             WeightGoal(current_weight_kg=75.0, target_weight_kg=70.0, pace_kg_per_week=0.05)
 
+    @pytest.mark.parametrize("pace", [0.1, 0.5, 1.0])
+    def test_valid_pace_including_boundaries_is_kept(self, pace: float) -> None:
+        goal = WeightGoal(current_weight_kg=75.0, target_weight_kg=70.0, pace_kg_per_week=pace)
+        assert goal.pace_kg_per_week == pace
+
     def test_invalid_target_gte_current(self) -> None:
         with pytest.raises(ValidationError):
             WeightGoal(current_weight_kg=70.0, target_weight_kg=75.0)
