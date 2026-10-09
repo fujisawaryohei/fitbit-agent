@@ -34,11 +34,17 @@ def _make_sse_stream(*chunks: str):
 
 
 class TestChatAuth:
-    def test_no_cookie_returns_401(self):
-        client = TestClient(_app)
-        response = client.post("/chat", json={"message": "こんにちは"})
+    def test_no_cookie_returns_401(self, container):
+        mock_user_repo = MagicMock()
+        mock_chat_repo = MagicMock()
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(mock_chat_repo):
+            client = TestClient(_app)
+            response = client.post("/chat", json={"message": "こんにちは"})
         assert response.status_code == 401
         assert "認証が必要です" in response.json()["detail"]
+        assert mock_user_repo.method_calls == []
+        assert mock_chat_repo.method_calls == []
 
     def test_unknown_user_returns_401(self, container):
         mock_user_repo = MagicMock()
@@ -183,11 +189,17 @@ class TestGetChats:
             ),
         ]
 
-    def test_no_cookie_returns_401(self):
-        client = TestClient(_app)
-        response = client.get("/chats")
+    def test_no_cookie_returns_401(self, container):
+        mock_user_repo = MagicMock()
+        mock_chat_repo = MagicMock()
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(mock_chat_repo):
+            client = TestClient(_app)
+            response = client.get("/chats")
         assert response.status_code == 401
         assert "認証が必要です" in response.json()["detail"]
+        assert mock_user_repo.method_calls == []
+        assert mock_chat_repo.method_calls == []
 
     def test_unknown_user_returns_401(self, container):
         mock_user_repo = MagicMock()
@@ -255,11 +267,20 @@ class TestGetMessages:
             ),
         ]
 
-    def test_no_cookie_returns_401(self):
-        client = TestClient(_app)
-        response = client.get("/chats/42/messages")
+    def test_no_cookie_returns_401(self, container):
+        mock_user_repo = MagicMock()
+        mock_chat_repo = MagicMock()
+        mock_message_repo = MagicMock()
+        with container.user_repo.override(mock_user_repo), \
+             container.chat_repo.override(mock_chat_repo), \
+             container.message_repo.override(mock_message_repo):
+            client = TestClient(_app)
+            response = client.get("/chats/42/messages")
         assert response.status_code == 401
         assert "認証が必要です" in response.json()["detail"]
+        assert mock_user_repo.method_calls == []
+        assert mock_chat_repo.method_calls == []
+        assert mock_message_repo.method_calls == []
 
     def test_returns_messages(self, container):
         user = _make_mock_user()
