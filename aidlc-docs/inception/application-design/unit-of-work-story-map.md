@@ -35,9 +35,9 @@
 | US-05 | 体重・BMI取得 | `get_weight` @tool + FitbitClient |
 | US-06 | 心拍数取得 | `get_heart_rate` @tool + FitbitClient |
 | US-07 | 食事ログ取得 | `get_calories_in` @tool + FitbitClient |
-| US-09 | チャット食事データ補完 | agent_node（LLM 判断ロジック） |
+| US-09 | チャット食事データ補完 | fitness_assistant_node（LLM 判断ロジック） |
 | US-10 | 目標体重プラン生成 | `calculate_calorie_deficit` @tool |
-| US-11 | 食事プラン提案 | agent_node（LLM 生成） |
+| US-11 | 食事プラン提案 | fitness_assistant_node（LLM 生成） |
 | US-12 | 自宅運動プラン提案 | `generate_home_workout_plan` @tool |
 | US-13 | 進捗確認 | `get_weekly_progress` @tool + FitbitClient |
 | US-14 | ショートタームメモリ | MemorySaver + MessagesState |

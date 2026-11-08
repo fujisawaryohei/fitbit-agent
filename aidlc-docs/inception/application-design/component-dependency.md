@@ -36,7 +36,7 @@
     +--[memory_inject_node]---> [MemoryManager] ---> [pgvector DB]
     |                           （Long-term memory 検索）
     |
-    +--[agent_node] ----------> [LLM API: Claude]
+    +--[fitness_assistant_node] ----------> [LLM API: Claude]
     |   （ツール呼び出し判断）
     |
     +--[tool_node] -----------> [ToolRegistry @tool]

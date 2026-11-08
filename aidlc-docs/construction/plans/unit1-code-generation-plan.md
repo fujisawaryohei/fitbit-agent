@@ -151,9 +151,9 @@ US-02, US-04〜07, US-09〜15
   - `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_HOST` を `.env` から読み込む
   - `langfuse.callback.CallbackHandler` を返す
 
-### Step 15-1: agent_node の実装
+### Step 15-1: fitness_assistant_node の実装
 - [ ] `agent/nodes.py` を作成
-- [ ] `agent_node(state: AgentState) -> dict` の実装
+- [ ] `fitness_assistant_node(state: AgentState) -> dict` の実装
   - `ChatAnthropic` でLLMを呼び出す（モデル: `claude-sonnet-4-6`）
   - ツール一覧を `bind_tools` でバインド
   - メッセージ履歴を渡して応答を生成
@@ -161,7 +161,7 @@ US-02, US-04〜07, US-09〜15
 ### Step 16-1: 最小グラフの実装
 - [ ] `agent/graph.py` を作成
 - [ ] `StateGraph(AgentState)` で最小グラフを定義
-  - `START → agent_node → END`
+  - `START → fitness_assistant_node → END`
 - [ ] `InMemorySaver()` をチェックポインターとしてコンパイル
 
 ### Milestone 3-1 動作確認
@@ -181,8 +181,8 @@ US-02, US-04〜07, US-09〜15
 ### Step 16-2: グラフに tool_node を追加
 - [ ] `agent/graph.py` を更新
 - [ ] `tool_node` をグラフに追加
-- [ ] `agent_node` に条件分岐（`should_continue`）: `tool_node` or `memory_save_node`
-- [ ] `tool_node → agent_node`（ループ）を追加
+- [ ] `fitness_assistant_node` に条件分岐（`should_continue`）: `tool_node` or `memory_save_node`
+- [ ] `tool_node → fitness_assistant_node`（ループ）を追加
 
 ### Milestone 3-2 動作確認
 - [ ] 「今日の歩数を教えて」で `get_steps` ツールが呼ばれることを確認
@@ -214,7 +214,7 @@ US-02, US-04〜07, US-09〜15
 
 ### Step 16-3: 完全なグラフの実装
 - [ ] `agent/graph.py` を更新して完全なグラフを組み立てる
-  - `START → memory_inject_node → agent_node`
+  - `START → memory_inject_node → fitness_assistant_node`
   - `memory_save_node → END`
 
 ### Step 17: main.py の実装

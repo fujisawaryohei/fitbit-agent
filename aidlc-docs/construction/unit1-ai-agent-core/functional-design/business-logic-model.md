@@ -108,7 +108,7 @@ FUNCTION handle_missing_food_log(food_log_result):
 ```
 
 ### エージェントの振る舞い
-- `get_calories_in` ツールがデータなしを返した場合、`agent_node`（LLM）がユーザーに食事を尋ねる
+- `get_calories_in` ツールがデータなしを返した場合、`fitness_assistant_node`（LLM）がユーザーに食事を尋ねる
 - ユーザーが食事内容をチャットで伝えると、LLM が概算カロリーを計算して提案
 
 ---
@@ -187,7 +187,7 @@ FUNCTION load_long_term_memory(session_id, current_message):
 
   3. memory_context = format_memories(relevant_memories)
 
-  4. RETURN memory_context  # agent_node のシステムプロンプトに注入
+  4. RETURN memory_context  # fitness_assistant_node のシステムプロンプトに注入
 ```
 
 ---
@@ -252,10 +252,10 @@ START
 memory_inject_node
   │ Long-term memory を取得してシステムプロンプトに注入
   ▼
-agent_node (LLM)
+fitness_assistant_node (LLM)
   │ メッセージ履歴 + メモリから応答・ツール呼び出し判断
   │
-  ├─── ツール呼び出しあり ──→ tool_node ──→ (agent_node へループ)
+  ├─── ツール呼び出しあり ──→ tool_node ──→ (fitness_assistant_node へループ)
   │
   └─── 最終回答 ──→ memory_save_node
                        │ 会話を要約して pgvector に保存

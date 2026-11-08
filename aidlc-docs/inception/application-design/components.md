@@ -64,9 +64,9 @@
 ```
 [START]
   └─→ [memory_inject_node]   ← Long-term memory から関連情報を取得してコンテキストに注入
-        └─→ [agent_node]     ← LLM 呼び出し（ツール使用判断）
+        └─→ [fitness_assistant_node]     ← LLM 呼び出し（ツール使用判断）
               ├─→ [tool_node] ← ツール実行（条件: tool_calls あり）
-              │     └─→ [agent_node]  （ループ）
+              │     └─→ [fitness_assistant_node]  （ループ）
               └─→ [memory_save_node]  ← 重要情報を Long-term memory に保存（条件: END前）
                     └─→ [END]
 ```

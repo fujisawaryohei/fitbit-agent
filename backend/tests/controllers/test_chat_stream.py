@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage
 from backend.controllers import chat as chat_module
 from backend.models.message_role import MessageRole
 
-AGENT_META = {"langgraph_node": "agent_node"}
+AGENT_META = {"langgraph_node": "fitness_assistant_node"}
 
 
 def _agent_yielding(*items, error: Exception | None = None) -> MagicMock:

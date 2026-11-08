@@ -26,7 +26,7 @@ def _make_sse_stream(*chunks: str):
 
     async def _gen():
         for chunk in chunks:
-            yield AIMessage(content=chunk), {"langgraph_node": "agent_node"}
+            yield AIMessage(content=chunk), {"langgraph_node": "fitness_assistant_node"}
 
     mock = MagicMock()
     mock.astream.return_value = _gen()

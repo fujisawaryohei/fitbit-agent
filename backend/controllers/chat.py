@@ -170,7 +170,7 @@ async def _sse_generator(
             config=config,
             stream_mode="messages",
         ):
-            if metadata.get("langgraph_node") != "agent_node":
+            if metadata.get("langgraph_node") != "fitness_assistant_node":
                 continue
 
             content = msg.content
