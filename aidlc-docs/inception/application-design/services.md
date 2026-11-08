@@ -29,10 +29,10 @@ agent = LangGraphAgent(
 **チャットフロー（`POST /chat` 呼び出し時）**:
 ```
 1. memory_inject_node : Long-term memory を検索 → コンテキスト注入
-2. agent_node         : LLM でツール使用判断
+2. fitness_assistant_node         : LLM でツール使用判断
 3. [tool_calls あり]
    └─ tool_node       : @tool を実行（Fitbit API / プランニング計算）
-   └─ agent_node      : ループ（ツール結果を受けて再思考）
+   └─ fitness_assistant_node      : ループ（ツール結果を受けて再思考）
 4. [tool_calls なし]
    └─ memory_save_node: 重要情報を Long-term memory に保存
 5. SSE チャンクをストリーム送信

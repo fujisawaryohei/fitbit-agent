@@ -26,7 +26,7 @@ POST /chat
             │
             ├─ LangGraphAgent.stream(message, session_id) を呼び出し
             │     │
-            │     └─ agent_node チャンクをイテレート
+            │     └─ fitness_assistant_node チャンクをイテレート
             │           │
             │           ├─ チャンク内に content あり
             │           │    └─ SSEChunk(type="chunk", content=...) を yield

@@ -48,9 +48,9 @@ Fitbit APIから取得した健康データをもとに、カスタム ReAct エ
 ```
 [START]
   └─→ memory_inject_node   ← Long-term memory 検索・コンテキスト注入
-        └─→ agent_node     ← LLM 呼び出し（Claude）
+        └─→ fitness_assistant_node     ← LLM 呼び出し（Claude）
               ├─→ tool_node          (tool_calls あり)
-              │     └─→ agent_node  （ReActループ）
+              │     └─→ fitness_assistant_node  （ReActループ）
               └─→ memory_save_node  (tool_calls なし → END前)
                     └─→ [END]
 ```

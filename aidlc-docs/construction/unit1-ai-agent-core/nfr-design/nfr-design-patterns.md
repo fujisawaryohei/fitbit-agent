@@ -155,7 +155,7 @@ def get_activities(date: str = "today") -> str | dict:
 LLMの全応答を待ってから返すと、ユーザーは長い沈黙を経験する。
 
 ### 解決策
-`agent.stream()` でチャンクをイテレートし、`agent_node` からのトークンをリアルタイム出力する。
+`agent.stream()` でチャンクをイテレートし、`fitness_assistant_node` からのトークンをリアルタイム出力する。
 
 ```python
 # Unit 1: Python スクリプト実行時（ターミナル出力）

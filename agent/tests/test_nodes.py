@@ -12,7 +12,7 @@ from langgraph.graph import END
 
 from agent.nodes import (
     _extract_text,
-    agent_node,
+    fitness_assistant_node,
     memory_inject_node,
     memory_save_node,
     should_continue,
@@ -69,7 +69,7 @@ class TestAgentNode:
         response = AIMessage(content="応答")
         with patch("agent.nodes._llm") as mock_llm:
             mock_llm.invoke.return_value = response
-            result = agent_node(_state(messages))
+            result = fitness_assistant_node(_state(messages))
         sent: list[AnyMessage] = mock_llm.invoke.call_args[0][0]
         return result, sent
 

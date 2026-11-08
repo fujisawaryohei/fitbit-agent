@@ -47,7 +47,7 @@ _tools = [
 _llm = ChatBedrockConverse(model="jp.anthropic.claude-haiku-4-5-20251001-v1:0", region_name="ap-northeast-1").bind_tools(_tools)
 
 
-def agent_node(state: AgentState) -> dict[str, list[AnyMessage]]:
+def fitness_assistant_node(state: AgentState) -> dict[str, list[AnyMessage]]:
     system_prompt = textwrap.dedent("""
     あなたは、フィットネスサポートのアシスタントです。以下のような事を行います。
         **📊 健康データの確認**

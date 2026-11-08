@@ -7,7 +7,7 @@
 │                    LangGraphAgent                        │
 │  ┌──────────────────────────────────────────────────┐   │
 │  │  graph.py                                         │   │
-│  │  memory_inject_node → agent_node ⇄ tool_node     │   │
+│  │  memory_inject_node → fitness_assistant_node ⇄ tool_node     │   │
 │  │                            └→ memory_save_node   │   │
 │  └──────────────────────────────────────────────────┘   │
 │           │                    │                         │

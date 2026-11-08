@@ -51,7 +51,7 @@ def memory_inject_node(state: AgentState) -> AgentState:
     # Input:  AgentState（messages, session_id）
     # Output: 更新された AgentState
 
-def agent_node(state: AgentState) -> AgentState:
+def fitness_assistant_node(state: AgentState) -> AgentState:
     # LLM を呼び出し、ツール使用判断または最終応答を生成
     # Input:  AgentState
     # Output: 更新された AgentState（tool_calls または final response）
